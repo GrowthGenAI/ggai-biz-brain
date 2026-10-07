@@ -1,0 +1,25 @@
+{
+  "name": "ggai-business-brain",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GGAI Business Brain by Growth GenAI: your second brain dashboard for on-brand content.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@vercel/blob": "2.8.1",
+    "jszip": "3.10.2",
+    "next": "15.5.27",
+    "openai": "^6.49.0",
+    "react": "19.1.9",
+    "react-dom": "19.1.9"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "@types/react": "19.1.10",
+    "@types/react-dom": "19.1.7",
+    "typescript": "5.6.3"
+  }
+}
