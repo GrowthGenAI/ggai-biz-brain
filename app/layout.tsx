@@ -1,9 +1,10 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { APP_BYLINE, APP_NAME } from '@/lib/appbrand';
 
 export const metadata: Metadata = {
-  title: 'GGAI Business Brain',
-  description: 'Your second brain for on-brand content. By Growth GenAI.',
+  title: APP_NAME,
+  description: `Your second brain for on-brand content. ${APP_BYLINE}`,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

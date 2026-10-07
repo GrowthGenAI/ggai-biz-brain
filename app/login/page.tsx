@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { APP_BYLINE, APP_LOGO, APP_NAME } from '@/lib/appbrand';
 
 export default function Login() {
   const [password, setPassword] = useState('');
@@ -21,10 +22,10 @@ export default function Login() {
     <div className="login">
       <form className="card stack" onSubmit={submit}>
         <div className="row">
-          <img src="/ggai-mark.svg" alt="" width={40} height={40} />
+          <img src={APP_LOGO} alt="" width={40} height={40} style={{ objectFit: 'contain' }} />
           <div>
-            <h2 style={{ margin: 0 }}>Business Brain</h2>
-            <div className="muted" style={{ fontSize: 13 }}>by Growth GenAI</div>
+            <h2 style={{ margin: 0 }}>{APP_NAME}</h2>
+            <div className="muted" style={{ fontSize: 13 }}>{APP_BYLINE}</div>
           </div>
         </div>
         <label className="f">

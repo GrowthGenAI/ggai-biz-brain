@@ -12,13 +12,15 @@ You need: a GitHub account, a Vercel account (sign up with **Continue with GitHu
 
 1. Click this button:
 
-   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FGrowthGenAI%2Fggai-biz-brain&project-name=my-business-brain&repository-name=my-business-brain&env=OPENAI_API_KEY,APP_PASSWORD&envDescription=OPENAI_API_KEY%20is%20your%20OpenAI%20key%20(starts%20sk-).%20APP_PASSWORD%20is%20the%20password%20you%20will%20type%20to%20open%20your%20dashboard.&stores=%5B%7B%22type%22%3A%22blob%22%7D%5D)
+   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FGrowthGenAI%2Fggai-biz-brain&project-name=my-business-brain&repository-name=my-business-brain&env=OPENAI_API_KEY,APP_PASSWORD,NEXT_PUBLIC_APP_NAME,NEXT_PUBLIC_APP_BYLINE&envDescription=OPENAI_API_KEY%20is%20your%20OpenAI%20key%20(starts%20sk-).%20APP_PASSWORD%20is%20the%20password%20you%20will%20type%20to%20open%20your%20dashboard.%20NEXT_PUBLIC_APP_NAME%20is%20your%20dashboard%20name%20(e.g.%20Priya%20Content%20Brain).%20NEXT_PUBLIC_APP_BYLINE%20is%20the%20line%20under%20it%20(e.g.%20by%20Priya%20Coaching).&stores=%5B%7B%22type%22%3A%22blob%22%7D%5D)
 
 2. Vercel asks you to create a copy in your GitHub. Keep the name, keep **Private**, click **Create**.
-3. When it asks for storage, add the **Blob** store (one click, free).
-4. Fill in the two settings:
+3. When it asks for storage, add the **Blob** store: access **Public**, and tick **Add a read-write token**.
+4. Fill in the four settings:
    - `OPENAI_API_KEY`: your key from platform.openai.com → API keys (starts with `sk-`)
    - `APP_PASSWORD`: any password you will remember. You type it to open your dashboard.
+   - `NEXT_PUBLIC_APP_NAME`: your dashboard's name, e.g. `Priya Content Brain`
+   - `NEXT_PUBLIC_APP_BYLINE`: the line under it, e.g. `by Priya Coaching`
 5. Click **Deploy** and wait 2 to 4 minutes.
 6. Open the link under **Domains** (ends in `.vercel.app`), log in with your password, and bookmark it.
 
@@ -59,6 +61,9 @@ Hosting on Vercel's free Hobby plan and Blob storage are free at this size. Open
 | `BLOB_READ_WRITE_TOKEN` | auto | Added when you connect the Blob store |
 | `OPENAI_MODEL` | no | Text model, default `gpt-4.1` |
 | `OPENAI_IMAGE_MODEL` | no | Image model, default `gpt-image-1` |
+| `NEXT_PUBLIC_APP_NAME` | no | Dashboard name, default `Business Brain` |
+| `NEXT_PUBLIC_APP_BYLINE` | no | Line under the name, default `by Growth GenAI` |
+| `NEXT_PUBLIC_APP_LOGO_URL` | no | Link to a square logo image, default the GGAI mark |
 
 After changing a setting: **Deployments → ⋯ → Redeploy**.
 

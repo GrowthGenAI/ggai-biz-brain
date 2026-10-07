@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { APP_BYLINE, APP_LOGO, APP_NAME } from '@/lib/appbrand';
 
 const NAV = [
   { href: '/', label: '✦ Studio' },
@@ -21,10 +22,10 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     <div className="shell">
       <aside className="side">
         <div className="brand-row">
-          <img src="/ggai-mark.svg" alt="" />
+          <img src={APP_LOGO} alt="" style={{ objectFit: 'contain' }} />
           <div>
-            <b>Business Brain</b>
-            <small>by Growth GenAI</small>
+            <b>{APP_NAME}</b>
+            <small>{APP_BYLINE}</small>
           </div>
         </div>
         <nav className="nav">
@@ -36,7 +37,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="spacer" />
         <div className="foot">
-          GGAI Business Brain v1
+          {APP_NAME} v1
           <br />
           <button onClick={logout}>Log out</button>
         </div>
