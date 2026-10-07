@@ -57,6 +57,19 @@ Each content slide: heading is the situation, bullets: "Don't: …" then "Do: �
 ${INTENTS}
 ${CAROUSEL_JSON(slides)}`,
   },
+  'lead-magnet': {
+    name: 'Lead magnet',
+    guide: ({ slides }) => `FORMAT: a lead magnet (free checklist, template, cheat sheet or mini-guide) as ${slides} portrait pages, 1080 x 1350 each.
+The same pages are posted as a LinkedIn document, as an Instagram carousel, and sent as the free PDF download.
+Deliver ONE quick win the reader can use within 15 minutes. Choose the format from the promise: save time = checklist or template, learn how = mini-guide or framework, copy what works = swipe file.
+Pages: 1 cover (title 4-8 words + a one-line promise) · 2 "By the end of this you will…" · then the actual content, one idea per page, checklist items or steps as bullets (max 6 short bullets a page) · second-last page "Do this first" (one action) · last page the next step (a call, the paid offer or the community), taken from the notes.
+Never invent numbers, results or how many people received it.
+Return JSON: {"title": string (the lead magnet's name), "intent": "Soft selling", "keyword": one word people comment to get it,
+ "slides": [ exactly ${slides} items. Page 1 {"kind":"cover","heading","body"}, content pages {"kind":"content","heading": max 8 words,"body": max 35 words OR "bullets": up to 6 lines of max 10 words}, last page {"kind":"cta","heading": max 8 words,"body": the next step} ],
+ "post": LinkedIn promotion post: hook line, "Here's what's inside:" then 3-5 "→ " benefit lines, then "Comment <KEYWORD> and I'll send it to you.",
+ "caption": Instagram caption, 60-120 words, ends with "Comment <KEYWORD> and I'll DM it to you", max 5 hashtags,
+ "dm": the DM sent with the link, 2-3 short lines}`,
+  },
   'image-post': {
     name: 'Image post',
     guide: () => `FORMAT: one image post. The eye must get the idea in two seconds.

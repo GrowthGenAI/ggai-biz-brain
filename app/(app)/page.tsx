@@ -22,7 +22,7 @@ export default function Studio() {
     fetch('/api/status').then((r) => r.json()).then(setStatus).catch(() => {});
   }, []);
 
-  const { kind } = detectKind(input);
+  const { kind, command } = detectKind(input);
   const typingCommand = /^\/\S*$/.test(input.trim()) && !input.includes(' ');
   const matches = useMemo(() => {
     const q = input.trim().toLowerCase();
@@ -61,7 +61,7 @@ export default function Studio() {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) run();
   }
 
-  const label = kind === 'answer' ? (input.trim() && !input.trim().startsWith('/') ? 'ASK YOUR BRAIN' : 'TYPE / FOR COMMANDS') : COMMANDS.find((c) => c.kind === kind)!.label.toUpperCase();
+  const label = kind === 'answer' ? (input.trim() && !input.trim().startsWith('/') ? 'ASK YOUR BRAIN' : 'TYPE / FOR COMMANDS') : (COMMANDS.find((c) => c.cmd === command) || COMMANDS.find((c) => c.kind === kind))!.label.toUpperCase();
   const who = brand.founderName ? brand.founderName.split(' ')[0] : '';
 
   return (

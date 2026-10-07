@@ -5,6 +5,12 @@ import PrintButton from './PrintButton';
 
 export const dynamic = 'force-dynamic';
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const out = await getOutput(id);
+  return { title: out?.title || 'Carousel' };
+}
+
 export default async function Print({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const [out, brand] = await Promise.all([getOutput(id), getBrand()]);

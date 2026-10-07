@@ -7,6 +7,7 @@ export const COMMANDS: { cmd: string; kind: Exclude<Kind, 'answer'>; label: stri
   { cmd: '/text', kind: 'text', label: 'Text post', hint: 'LinkedIn or X post in your voice', aliases: ['/post'] },
   { cmd: '/reel', kind: 'reel', label: 'Reel script', hint: 'Short video script, 15 to 90 seconds', aliases: ['/reels', '/short'] },
   { cmd: '/video', kind: 'video', label: 'Long video', hint: 'Long video script with chapters', aliases: ['/script', '/longform', '/youtube'] },
+  { cmd: '/leadmagnet', kind: 'carousel', label: 'Lead magnet', hint: 'Free guide or checklist: LinkedIn PDF + Instagram slides', aliases: ['/magnet', '/freebie', '/guide'] },
 ];
 
 export type Parsed = {
@@ -35,7 +36,9 @@ export function parseCommand(input: string): Parsed {
   const lower = brief.toLowerCase();
 
   const slideMatch = lower.match(/(\d{1,2})\s*slides?\b/);
-  let slides = slideMatch ? parseInt(slideMatch[1], 10) : 7;
+  const isMagnet = command === '/leadmagnet';
+  const pageMatch = lower.match(/(\d{1,2})\s*pages?\b/);
+  let slides = slideMatch ? parseInt(slideMatch[1], 10) : pageMatch && isMagnet ? parseInt(pageMatch[1], 10) : isMagnet ? 8 : 7;
   slides = Math.min(15, Math.max(3, slides));
 
   const secMatch = lower.match(/\b(15|30|45|60|90)\s*(seconds?|secs?|s)\b/);
@@ -50,7 +53,7 @@ export function parseCommand(input: string): Parsed {
     ? srcMatch[1].split(/[,;]/).map((s) => slug(s.replace(/\.md$/i, ''))).filter(Boolean)
     : [];
 
-  return { kind, command, brief, slides, seconds, minutes, sources, playbook: pickPlaybook(kind, lower) };
+  return { kind, command, brief, slides, seconds, minutes, sources, playbook: isMagnet ? 'lead-magnet' : pickPlaybook(kind, lower) };
 }
 
 export function pickPlaybook(kind: Kind, lower: string): string {

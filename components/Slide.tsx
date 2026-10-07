@@ -22,6 +22,7 @@ export default function Slide({ slide, brand, n, total }: { slide: CarouselSlide
   const bg = dark ? c.primary : c.background;
   const fg = dark ? (isDark(c.primary) ? '#FFFFFF' : c.text) : c.text;
   const name = brand.founderName || brand.brandName;
+  const dense = (slide.bullets?.length || 0) > 4 || (slide.body || '').length > 170;
 
   const base: React.CSSProperties = {
     width: 1080, height: 1350, background: bg, color: fg, position: 'relative', overflow: 'hidden',
@@ -95,11 +96,11 @@ export default function Slide({ slide, brand, n, total }: { slide: CarouselSlide
       <div style={{ fontFamily: head, fontSize: slide.imageUrl ? 70 : 84, lineHeight: 1.08, fontWeight: 700, color: c.primary, marginTop: slide.imageUrl ? 50 : 110 }}>
         {slide.heading}
       </div>
-      {slide.body && <div style={{ fontSize: 42, lineHeight: 1.45, marginTop: 36 }}>{slide.body}</div>}
+      {slide.body && <div style={{ fontSize: dense ? 36 : 42, lineHeight: 1.45, marginTop: 36 }}>{slide.body}</div>}
       {slide.bullets?.length ? (
-        <div style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: dense ? 18 : 24 }}>
           {slide.bullets.map((b, i) => (
-            <div key={i} style={{ display: 'flex', gap: 22, fontSize: 40, lineHeight: 1.35 }}>
+            <div key={i} style={{ display: 'flex', gap: 22, fontSize: dense ? 34 : 40, lineHeight: 1.35 }}>
               <span style={{ width: 18, height: 18, borderRadius: '50%', background: c.accent, marginTop: 18, flex: 'none' }} />
               <span>{b}</span>
             </div>

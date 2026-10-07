@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vercel/blob": "2.8.1",
+    "html-to-image": "^1.11.13",
     "jszip": "3.10.2",
     "next": "15.5.27",
     "openai": "^6.49.0",

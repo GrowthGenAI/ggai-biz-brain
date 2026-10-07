@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Slide, { fontHref, isDark } from './Slide';
+import { IG_MAX_SLIDES, download, fitImage, inlineFontCss, sameOrigin, slidesToZip, slug } from '@/lib/formats';
 import type { BrandKit, Output } from '@/lib/types';
 
 const KIND_LABEL: Record<string, string> = {
@@ -59,7 +60,39 @@ export default function OutputView({ out: initial, brand, autoDraw = false }: { 
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
   const started = useRef(false);
+  const exportRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [exporting, setExporting] = useState(false);
   const d = out.data || {};
+
+  async function exportInstagram() {
+    setErr('');
+    setBusy('Making Instagram images (1080 × 1350)…');
+    setExporting(true);
+    try {
+      await new Promise((r) => setTimeout(r, 400));
+      const css = await inlineFontCss(fontHref(brand));
+      const nodes = exportRefs.current.filter(Boolean) as HTMLDivElement[];
+      const zip = await slidesToZip(nodes.slice(0, IG_MAX_SLIDES), out.title, css);
+      download(zip, `${slug(out.title)}-instagram.zip`);
+    } catch (e: any) {
+      setErr('Could not make the images: ' + (e?.message || 'unknown error'));
+    } finally {
+      setExporting(false);
+      setBusy('');
+    }
+  }
+
+  async function exportImage(w: number, h: number) {
+    if (!d.imageUrl) return;
+    try {
+      const blob = await fitImage(d.imageUrl, w, h, brand.colors.background);
+      download(blob, `${slug(out.title)}-${w}x${h}.png`);
+    } catch (e: any) {
+      setErr('Could not resize the image: ' + (e?.message || 'unknown error'));
+    }
+  }
+
+  const exportBrand: BrandKit = { ...brand, headshotUrl: sameOrigin(brand.headshotUrl), logoUrl: sameOrigin(brand.logoUrl) };
 
   async function draw(target: 'image' | 'hero' | 'slide', index?: number) {
     setErr('');
@@ -104,7 +137,7 @@ export default function OutputView({ out: initial, brand, autoDraw = false }: { 
       {href && <link rel="stylesheet" href={href} />}
       <div className="out-head">
         <div>
-          <span className="cmd-label">{KIND_LABEL[out.kind]}</span>{' '}
+          <span className="cmd-label">{out.command === '/leadmagnet' ? 'LEAD MAGNET' : KIND_LABEL[out.kind]}</span>{' '}
           <span className="pill">{out.playbook}</span>{' '}
           {d.intent && <span className="pill">{d.intent}</span>}
           <h3>{out.title}</h3>
@@ -148,11 +181,27 @@ export default function OutputView({ out: initial, brand, autoDraw = false }: { 
             ))}
           </div>
           <div className="row" style={{ marginTop: 14 }}>
-            <a className="btn small" href={`/print/${out.id}`} target="_blank">Download PDF</a>
+            <a className="btn small" href={`/print/${out.id}`} target="_blank">LinkedIn PDF</a>
+            <button className="btn small" disabled={!!busy} onClick={exportInstagram}>Instagram images</button>
             <button className="btn small ghost" disabled={!!busy} onClick={illustrateAll}>Add AI illustrations</button>
-            <button className="btn small ghost" onClick={() => copy(d.caption || '', setMsg)}>Copy caption</button>
+            {d.post && <button className="btn small ghost" onClick={() => copy(d.post, setMsg)}>Copy LinkedIn post</button>}
+            <button className="btn small ghost" onClick={() => copy(d.caption || '', setMsg)}>Copy {d.post ? 'Instagram caption' : 'caption'}</button>
+            {d.dm && <button className="btn small ghost" onClick={() => copy(d.dm, setMsg)}>Copy DM</button>}
           </div>
+          <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>
+            Every page is 1080 × 1350. LinkedIn: upload the PDF with Add a document and give it a title. Instagram: upload the images in order{(d.slides || []).length > IG_MAX_SLIDES ? ` (Instagram takes the first ${IG_MAX_SLIDES})` : ''}.
+          </div>
+          {d.post && <div className="post" style={{ marginTop: 12 }}>{d.post}</div>}
           {d.caption && <div className="post" style={{ marginTop: 12 }}>{d.caption}</div>}
+          {exporting && (
+            <div style={{ position: 'fixed', left: -20000, top: 0 }} aria-hidden>
+              {(d.slides || []).map((s: any, i: number) => (
+                <div key={i} ref={(el) => { exportRefs.current[i] = el; }} style={{ width: 1080, height: 1350 }}>
+                  <Slide slide={{ ...s, imageUrl: s.imageUrl ? sameOrigin(s.imageUrl) : undefined }} brand={exportBrand} n={i + 1} total={d.slides.length} />
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
 
@@ -173,7 +222,8 @@ export default function OutputView({ out: initial, brand, autoDraw = false }: { 
             </div>
           </div>
           <div className="row" style={{ marginTop: 12 }}>
-            {d.imageUrl && <a className="btn small" href={d.imageUrl} download target="_blank">Download image</a>}
+            {d.imageUrl && <button className="btn small" onClick={() => exportImage(1080, 1350)}>Download 4:5 (1080 × 1350)</button>}
+            {d.imageUrl && <button className="btn small ghost" onClick={() => exportImage(1080, 1080)}>Square (1080 × 1080)</button>}
             <button className="btn small ghost" disabled={!!busy} onClick={() => draw('image')}>{d.imageUrl ? 'Redraw' : 'Draw image'}</button>
             <button className="btn small ghost" onClick={() => copy(d.caption || '', setMsg)}>Copy caption</button>
           </div>
