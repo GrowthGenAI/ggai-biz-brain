@@ -75,7 +75,7 @@ Return JSON: {"title": string, "intent": string, "onImageText": string, "shape":
 Hook: under 12 words, starts with I, You, If, When, or a quoted line. Line two earns the "see more".
 Short paragraphs of 1-2 lines. One idea. End with the CTA that matches the intent.
 ${INTENTS}
-Return JSON: {"title": string, "intent": string, "hook": string, "body": string (the rest of the post, blank lines between paragraphs, no hook repeated), "cta": string, "hashtags": [max 3]}`,
+Return JSON: {"title": string, "intent": string, "hook": string, "body": string (the rest of the post, blank lines between paragraphs; do NOT repeat the hook and do NOT include the CTA), "cta": string (the closing call to action, written once, only here), "hashtags": [max 3]}`,
   },
   'story-post': {
     name: 'Story-flow post',
@@ -84,7 +84,7 @@ Beats: the moment (place, time, what happened) → what I believed → the turn 
 Only use stories that exist in the notes or the brief. If no real story exists, write it as a lesson, never invent one.
 Hook: under 12 words, starts with I, You, If, When, or a quoted line.
 ${INTENTS}
-Return JSON: {"title": string, "intent": string, "hook": string, "body": string, "cta": string, "hashtags": [max 3]}`,
+Return JSON: {"title": string, "intent": string, "hook": string, "body": string (do NOT repeat the hook or include the CTA), "cta": string (written once, only here), "hashtags": [max 3]}`,
   },
   'framework-post': {
     name: 'Framework post',
@@ -92,7 +92,7 @@ Return JSON: {"title": string, "intent": string, "hook": string, "body": string,
 Hook names the outcome. Then a named framework or numbered steps (3-7), each one line plus one line of why.
 Close with the one mistake people make, then the CTA.
 ${INTENTS}
-Return JSON: {"title": string, "intent": string, "hook": string, "body": string, "cta": string, "hashtags": [max 3]}`,
+Return JSON: {"title": string, "intent": string, "hook": string, "body": string (do NOT repeat the hook or include the CTA), "cta": string (written once, only here), "hashtags": [max 3]}`,
   },
   newsletter: {
     name: 'Newsletter',

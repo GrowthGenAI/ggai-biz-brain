@@ -15,7 +15,11 @@ function copy(text: string, set: (s: string) => void) {
 }
 
 export function postText(d: any) {
-  return [d.hook, d.body, d.cta, (d.hashtags || []).map((h: string) => (h.startsWith('#') ? h : `#${h}`)).join(' ')].filter(Boolean).join('\n\n');
+  const norm = (t: string) => String(t || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  let body = String(d.body || '');
+  if (d.hook && norm(body).startsWith(norm(d.hook))) body = body.slice(String(d.hook).length).trim();
+  const cta = d.cta && norm(body).includes(norm(d.cta)) ? '' : d.cta;
+  return [d.hook, body, cta, (d.hashtags || []).map((h: string) => (h.startsWith('#') ? h : `#${h}`)).join(' ')].filter(Boolean).join('\n\n');
 }
 
 function newsletterText(d: any) {
