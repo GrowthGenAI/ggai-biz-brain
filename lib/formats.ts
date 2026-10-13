@@ -1,6 +1,7 @@
 'use client';
 import JSZip from 'jszip';
-import { toPng } from 'html-to-image';
+import { toJpeg, toPng } from 'html-to-image';
+import { PDFDocument } from 'pdf-lib';
 
 /*
  * Platform formats used everywhere in GGAI Business Brain.
@@ -56,7 +57,7 @@ export async function slidesToZip(nodes: HTMLElement[], title: string, fontEmbed
 }
 
 /** Fit any image onto an exact canvas without stretching or cutting it: the rest is filled with the brand background. */
-export async function fitImage(src: string, w: number, h: number, bg: string): Promise<Blob> {
+export async function fitImage(src: string, w: number, h: number, bg: string, type: 'image/png' | 'image/jpeg' = 'image/png'): Promise<Blob> {
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.src = sameOrigin(src);
@@ -70,7 +71,7 @@ export async function fitImage(src: string, w: number, h: number, bg: string): P
   const s = Math.min(w / img.naturalWidth, h / img.naturalHeight);
   const dw = img.naturalWidth * s, dh = img.naturalHeight * s;
   ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
-  return new Promise((resolve) => c.toBlob((b) => resolve(b!), 'image/png'));
+  return new Promise((resolve) => c.toBlob((b) => resolve(b!), type, 0.92));
 }
 
 export function download(blob: Blob, name: string) {
@@ -80,4 +81,39 @@ export function download(blob: Blob, name: string) {
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+/** Turn rendered full-size slide nodes into one LinkedIn document PDF: every page 1080 x 1350. */
+export async function slidesToPdf(nodes: HTMLElement[], title: string, fontEmbedCSS: string): Promise<Blob> {
+  const pdf = await PDFDocument.create();
+  pdf.setTitle(title);
+  for (const node of nodes) {
+    const dataUrl = await toJpeg(node, { width: SLIDE.w, height: SLIDE.h, pixelRatio: 1, quality: 0.92, cacheBust: true, fontEmbedCSS: fontEmbedCSS || undefined });
+    const img = await pdf.embedJpg(dataUrl);
+    // 1080 x 1350 px = 810 x 1012.5 pt, the same size as the print version
+    const page = pdf.addPage([810, 1012.5]);
+    page.drawImage(img, { x: 0, y: 0, width: 810, height: 1012.5 });
+  }
+  const bytes = await pdf.save();
+  return new Blob([bytes as BlobPart], { type: 'application/pdf' });
+}
+
+/** One JPEG per slide (Instagram's publishing API only takes JPEG). */
+export async function slidesToJpegs(nodes: HTMLElement[], fontEmbedCSS: string): Promise<Blob[]> {
+  const out: Blob[] = [];
+  for (const node of nodes) {
+    const dataUrl = await toJpeg(node, { width: SLIDE.w, height: SLIDE.h, pixelRatio: 1, quality: 0.92, cacheBust: true, fontEmbedCSS: fontEmbedCSS || undefined });
+    out.push(await (await fetch(dataUrl)).blob());
+  }
+  return out;
+}
+
+/** Save a file to the dashboard's storage and get its public link back. */
+export async function uploadFile(blob: Blob, name: string): Promise<string> {
+  const fd = new FormData();
+  fd.append('file', new File([blob], name, { type: blob.type }));
+  const res = await fetch('/api/upload', { method: 'POST', body: fd });
+  const j = await res.json();
+  if (!res.ok) throw new Error(j.error || 'Upload failed.');
+  return j.url;
 }

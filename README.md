@@ -70,3 +70,18 @@ After changing a setting: **Deployments → ⋯ → Redeploy**.
 ---
 
 © Growth GenAI. Licensed for use by Growth GenAI clients. See LICENSE.
+
+
+## Posting to LinkedIn and Instagram (Planner)
+
+Every text post, carousel and image has **Approve & schedule**: post now, or put it in the **Planner** on a date. A daily job (see `vercel.json`, 9:00 India time) posts whatever is due. Nothing is posted without approval.
+
+Add these in Vercel → Settings → Environment Variables, then connect the accounts on the Planner page:
+
+| Key | Where it comes from |
+|---|---|
+| `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` | linkedin.com/developers → your app → Auth (products: Sign In with LinkedIn using OpenID Connect, Share on LinkedIn; redirect `https://YOUR-DOMAIN/api/linkedin/callback`) |
+| `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET` | developers.facebook.com → your app → Instagram → API setup with Instagram login (redirect `https://YOUR-DOMAIN/api/instagram/callback`) |
+| `CRON_SECRET` | any long random text; protects the daily posting job |
+
+LinkedIn connections last 60 days (press Reconnect on the Planner). Instagram renews itself weekly. Instagram needs a Business or Creator account and posts up to 10 slides per carousel.

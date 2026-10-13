@@ -15,7 +15,8 @@
     "next": "15.5.27",
     "openai": "^6.49.0",
     "react": "19.1.9",
-    "react-dom": "19.1.9"
+    "react-dom": "19.1.9",
+    "pdf-lib": "1.17.1"
   },
   "devDependencies": {
     "@types/node": "22.10.2",

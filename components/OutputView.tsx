@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Slide, { fontHref, isDark } from './Slide';
+import SchedulePanel from './SchedulePanel';
 import { IG_MAX_SLIDES, download, fitImage, inlineFontCss, sameOrigin, slidesToZip, slug } from '@/lib/formats';
 import type { BrandKit, Output } from '@/lib/types';
 
@@ -64,20 +65,26 @@ export default function OutputView({ out: initial, brand, autoDraw = false }: { 
   const [exporting, setExporting] = useState(false);
   const d = out.data || {};
 
+  /** Draw every slide at full size off-screen so it can be turned into files. */
+  async function getSlides() {
+    setExporting(true);
+    await new Promise((r) => setTimeout(r, 400));
+    const css = await inlineFontCss(fontHref(brand));
+    const nodes = exportRefs.current.slice(0, (d.slides || []).length).filter(Boolean) as HTMLDivElement[];
+    return { nodes, css, done: () => setExporting(false) };
+  }
+
   async function exportInstagram() {
     setErr('');
     setBusy('Making Instagram images (1080 × 1350)…');
-    setExporting(true);
+    const { nodes, css, done } = await getSlides();
     try {
-      await new Promise((r) => setTimeout(r, 400));
-      const css = await inlineFontCss(fontHref(brand));
-      const nodes = exportRefs.current.filter(Boolean) as HTMLDivElement[];
       const zip = await slidesToZip(nodes.slice(0, IG_MAX_SLIDES), out.title, css);
       download(zip, `${slug(out.title)}-instagram.zip`);
     } catch (e: any) {
       setErr('Could not make the images: ' + (e?.message || 'unknown error'));
     } finally {
-      setExporting(false);
+      done();
       setBusy('');
     }
   }
@@ -162,6 +169,7 @@ export default function OutputView({ out: initial, brand, autoDraw = false }: { 
           <div className="row" style={{ marginTop: 12 }}>
             <button className="btn small" onClick={() => copy(postText(d), setMsg)}>Copy post</button>
           </div>
+          <SchedulePanel out={out} brand={brand} defaultLinkedIn={postText(d)} defaultCaption="" />
         </>
       )}
 
@@ -193,6 +201,7 @@ export default function OutputView({ out: initial, brand, autoDraw = false }: { 
           </div>
           {d.post && <div className="post" style={{ marginTop: 12 }}>{d.post}</div>}
           {d.caption && <div className="post" style={{ marginTop: 12 }}>{d.caption}</div>}
+          <SchedulePanel out={out} brand={brand} defaultLinkedIn={d.post || d.caption || ''} defaultCaption={d.caption || d.post || ''} getSlides={getSlides} />
           {exporting && (
             <div style={{ position: 'fixed', left: -20000, top: 0 }} aria-hidden>
               {(d.slides || []).map((s: any, i: number) => (
@@ -227,6 +236,7 @@ export default function OutputView({ out: initial, brand, autoDraw = false }: { 
             <button className="btn small ghost" disabled={!!busy} onClick={() => draw('image')}>{d.imageUrl ? 'Redraw' : 'Draw image'}</button>
             <button className="btn small ghost" onClick={() => copy(d.caption || '', setMsg)}>Copy caption</button>
           </div>
+          {d.imageUrl && <SchedulePanel key={d.imageUrl} out={out} brand={brand} defaultLinkedIn={d.caption || ''} defaultCaption={d.caption || ''} />}
         </>
       )}
 

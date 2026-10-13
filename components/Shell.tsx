@@ -7,6 +7,7 @@ const NAV = [
   { href: '/', label: '✦ Studio' },
   { href: '/brain', label: '◎ Brain' },
   { href: '/brand', label: '◆ Brand Kit' },
+  { href: '/planner', label: '▦ Planner' },
   { href: '/history', label: '☰ History' },
 ];
 
