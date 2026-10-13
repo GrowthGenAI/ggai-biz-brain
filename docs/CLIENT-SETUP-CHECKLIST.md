@@ -48,10 +48,15 @@ Everything carries the client's brand and Growth GenAI skills only.
     7. Redeploy (Deployments → ⋯ → Redeploy, or an empty commit push).
     8. Dashboard → Planner → Connect LinkedIn → Allow → card shows Connected. Test: a text post → Approve & schedule → untick Instagram → Post now → row shows Posted with a link.
     **B. Instagram (20 min)**
-    1. Instagram app → profile → ☰ → Account type and tools → Switch to professional account → Business.
-    2. developers.facebook.com → My Apps → Create app → use case **Manage messaging & content on Instagram**.
-    3. Instagram → API setup with Instagram login → Add account; Business login redirect URL `https://[client-domain]/api/instagram/callback`.
-    4. Copy the Instagram app ID and app secret.
+    1. **Check / switch to a professional account first.**
+       Check on laptop: instagram.com → Profile. "Professional dashboard" or a category under the name = already professional → skip to step 2.
+       Switch on the phone app (the laptop site often hides it): profile picture → ☰ → Settings and privacy → For professionals →
+       Account type and tools → Switch to professional account → pick a category → Business → Done.
+    2. developers.facebook.com → log in with Facebook → My Apps → Create App (first time: register as a developer, verify phone/email).
+       Name `[Brand] Brain` → use case **Manage messaging & content on Instagram** → business portfolio (or skip) → Create app.
+    3. Use cases → Customize (Instagram) → **API setup with Instagram login** → Generate access tokens → Add account → log in to the client's Instagram → Allow.
+    4. Set up Instagram business login → Business login settings → OAuth redirect URIs → `https://[client-domain]/api/instagram/callback` → Save.
+    5. Copy the **Instagram app ID** and **Instagram app secret** (Show) from that page, not the main Facebook App ID.
     **C. Vercel keys** (Settings → Environment Variables): `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `CRON_SECRET` (any long random text) → Redeploy.
     **D. Connect**: dashboard → Planner → Connect LinkedIn → Connect Instagram (both cards show Connected).
     **E. Use it**: on any text post, carousel or image → Approve & schedule → tick LinkedIn / Instagram → date → edit captions → Schedule (or Post now). Planner shows Scheduled → Posted with links; Download sheet (CSV) for the monthly tracker.
