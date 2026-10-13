@@ -30,7 +30,8 @@ export default function BrainField({ notes, active = [], busy }: { notes: N[]; a
     const draw = () => {
       const dpr = window.devicePixelRatio || 1;
       const w = c.clientWidth, h = c.clientHeight;
-      if (c.width !== w * dpr) { c.width = w * dpr; c.height = h * dpr; }
+      if (!w || !h) { raf = requestAnimationFrame(draw); return; }
+      if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
       const { active: act, busy: b } = state.current;

@@ -205,7 +205,7 @@ export default function CommandCentre() {
         .cc-clock { font-size: 11px; letter-spacing: .14em; color: #7d89ad; text-transform: uppercase; font-variant-numeric: tabular-nums; }
         .cc-state { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; border: 1px solid #2a3760; color: #9aa6c9; }
         .cc-state.on { border-color: #2fd3b5; color: #2fd3b5; box-shadow: 0 0 14px #2fd3b555; }
-        .cc-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; flex: 1; }
+        .cc-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); gap: 18px; flex: 1; }
         @media (max-width: 1100px) { .cc-grid { grid-template-columns: 1fr; } }
         .cc-board { position: relative; width: 100%; }
         .cc-canvas { position: absolute; left: 0; top: 0; width: ${W}px; height: ${H}px; transform-origin: top left; }
@@ -238,15 +238,16 @@ export default function CommandCentre() {
         .cc-btn { border: 0; border-radius: 10px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
         .cc-mic { background: #18224a; color: #cfd6ea; } .cc-mic.on { background: #e8603c; color: #fff; }
         .cc-go { background: #f2b33d; color: #10172f; } .cc-go:disabled { opacity: .45; }
-        .cc-menu { position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); background: #0c1328f7; border: 1px solid #2a3760; border-radius: 14px; padding: 8px; z-index: 5; box-shadow: 0 20px 50px #0009; backdrop-filter: blur(6px); }
-        .cc-menu button { display: flex; gap: 12px; align-items: center; width: 100%; text-align: left; background: transparent; border: 0; color: #e9ecf5; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+        .cc-menu { position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); background: #0c1328f7; border: 1px solid #2a3760; border-radius: 14px; padding: 8px; z-index: 5; box-shadow: 0 20px 50px #0009; backdrop-filter: blur(6px); max-height: 340px; overflow-y: auto; }
+        .cc-menu button { display: flex; gap: 12px; align-items: center; width: 100%; text-align: left; background: transparent; border: 0; color: #e9ecf5; padding: 6px 10px; border-radius: 10px; cursor: pointer; min-width: 0; }
+        .cc-menu button > span:last-child { min-width: 0; flex: 1; }
         .cc-menu button.on { background: #18224a; }
         .cc-menu b { font-family: ui-monospace, Menlo, monospace; font-size: 14px; } .cc-menu em { font-style: normal; color: #8592b8; font-size: 12px; margin-left: 6px; }
-        .cc-menu small { display: block; color: #7d89ad; font-size: 12px; margin-top: 2px; }
-        .cc-mi { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: #18224a; color: #f2b33d; flex: none; }
+        .cc-menu small { display: block; color: #7d89ad; font-size: 11.5px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cc-mi { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: #18224a; color: #f2b33d; flex: none; }
         .cc-opts { display: flex; gap: 14px; align-items: center; margin-top: 8px; font-size: 12px; color: #8592b8; }
         .cc-panel { position: relative; border: 1px solid #25325a; border-radius: 18px; background: radial-gradient(500px 400px at 50% 40%, #1a1440 0%, #0a0f22 70%); overflow: hidden; min-height: 560px; display: flex; flex-direction: column; }
-        .cc-field { flex: 1; min-height: 360px; }
+        .cc-field { flex: 1; min-height: 360px; position: relative; } .cc-field canvas { position: absolute; inset: 0; }
         .cc-cap { text-align: center; padding: 0 20px 22px; }
         .cc-cap b { display: block; color: #fff; font-size: 17px; margin-bottom: 4px; } .cc-cap span { color: #8d98bd; font-size: 13px; }
         .cc-cap .tag { color: #e06bd8; letter-spacing: .16em; font-size: 11px; font-weight: 700; }
@@ -335,7 +336,7 @@ export default function CommandCentre() {
           </div>
           </div>
           <div className="cc-opts">
-            <label className="row" style={{ gap: 6 }}><input type="checkbox" checked={pictures} onChange={(e) => setPictures(e.target.checked)} /> Draw AI pictures on carousel slides (uses your OpenAI key, a few minutes)</label>
+            <label style={{ display: 'flex', gap: 8, alignItems: 'center', cursor: 'pointer' }}><input type="checkbox" checked={pictures} onChange={(e) => setPictures(e.target.checked)} /> Draw AI pictures on carousel slides (OpenAI key, takes a few minutes)</label>
           </div>
           {err && <div className="err" style={{ marginTop: 10 }}>{err}</div>}
         </div>
