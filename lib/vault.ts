@@ -27,7 +27,7 @@ export function buildNote(rawPath: string, content: string, rootToStrip = ''): N
   };
 }
 
-/** If every path in a zip starts with the same top folder (e.g. "Sujata Second Brain/"), strip it. */
+/** If every path in a zip starts with the same top folder (e.g. "Sujata Growth Brain/"), strip it. */
 export function commonRoot(paths: string[]): string {
   const firsts = new Set(paths.map((p) => p.replace(/\\/g, '/').split('/')[0]));
   if (firsts.size === 1 && paths.every((p) => p.includes('/'))) return [...firsts][0] + '/';

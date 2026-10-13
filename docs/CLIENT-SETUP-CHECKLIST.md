@@ -5,7 +5,7 @@ Everything carries the client's brand and Growth GenAI skills only.
 
 ## Day 1 · Foundation (client's computer)
 1. Claude Desktop installed, paid plan, Code tab opens a local session (Git installed: `xcode-select --install` on Mac).
-2. Folder `[Client Name] Second Brain` on the Desktop.
+2. Folder `[Client Name] Growth Brain` on the Desktop.
 3. Run the GGAI **business-authority-foundation** skill: 7 questions → 6 Foundation files
    (icp, brand-messaging, rule-of-one, brand-positioning, business-in-a-box, voice-dna).
 4. Point the Code tab at the folder. Open the folder in Obsidian as a vault.
@@ -21,7 +21,7 @@ Everything carries the client's brand and Growth GenAI skills only.
 9. Deploy the dashboard: Deploy button in the GGAI repo README → Vercel → keep the repo private →
    add **Blob store (Public + read-write token)** → `OPENAI_API_KEY` → `APP_PASSWORD` →
    `NEXT_PUBLIC_APP_NAME` / `NEXT_PUBLIC_APP_BYLINE` / `NEXT_PUBLIC_APP_LOGO_URL` for the client's brand → Deploy → bookmark the Domains link.
-10. Zip the Second Brain folder → dashboard **Brain** → Upload vault (note count matches, constellation shows).
+10. Zip the Growth Brain folder → dashboard **Brain** → Upload vault (note count matches, constellation shows).
 11. **Brand Kit**: headshot, logo, Fill from my brain, Handle = brand name (not a URL), Role, strategic voice text, never-say list → Save.
 12. Run the GGAI **content-prompt-studio** skill in the Code tab → content-prompts.html (6 prompts, one keyword).
 13. **Command Centre** (the AI team screen: Chief → Strategist / Research → Content → formats, / menu, voice input):

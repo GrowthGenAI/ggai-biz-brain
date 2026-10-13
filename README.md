@@ -1,6 +1,6 @@
 # GGAI Business Brain
 
-**Your second brain, live at your own web address.** Upload the notes you built with Claude, set your Brand Kit once, then make carousels, newsletters, image posts, text posts, reel scripts and video scripts that sound like you and look like your brand.
+**Your Growth Brain, live at your own web address.** Upload the notes you built with Claude, set your Brand Kit once, then make carousels, newsletters, image posts, text posts, reel scripts and video scripts that sound like you and look like your brand.
 
 By **Growth GenAI** · growthgenai.in
 
@@ -26,7 +26,7 @@ You need: a GitHub account, a Vercel account (sign up with **Continue with GitHu
 
 ## First time inside
 
-1. **Brain** → zip your whole Second Brain folder and upload it.
+1. **Brain** → zip your whole Growth Brain folder and upload it.
 2. **Brand Kit** → upload your face and logo → **Fill from my brain** → check every field → **Save brand system**.
 3. **Studio** → type `/` and pick a format, or paste a prompt from your `content-prompts.html` or 30-day calendar.
 
@@ -46,7 +46,7 @@ Helpful lines in a prompt: `7 slides`, `30 seconds`, `8 minutes`, `Intent: Educa
 
 ## Weekly routine
 
-Drop new material into `00-Inbox` of your Second Brain, let Claude update the Wiki, then zip the folder and **Upload vault** again.
+Drop new material into `00-Inbox` of your Growth Brain, let Claude update the Wiki, then zip the folder and **Upload vault** again.
 
 ## Costs
 

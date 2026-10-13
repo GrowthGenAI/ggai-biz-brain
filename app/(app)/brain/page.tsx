@@ -23,7 +23,7 @@ export default function Brain() {
 
   async function uploadZip(file: File) {
     setErr(''); setMsg('');
-    if (!/\.zip$/i.test(file.name)) return setErr('Please choose the .zip of your whole Second Brain folder.');
+    if (!/\.zip$/i.test(file.name)) return setErr('Please choose the .zip of your whole Growth Brain folder.');
     setBusy('Reading your vault…');
     try {
       const zip = await JSZip.loadAsync(file);
@@ -83,7 +83,7 @@ export default function Brain() {
     <div className="stack" style={{ gap: 22 }}>
       <div>
         <h1>Your brain</h1>
-        <p className="sub">Upload your zipped Second Brain folder. Re-upload once a week so the dashboard knows what is new.</p>
+        <p className="sub">Upload your zipped Growth Brain folder. Re-upload once a week so the dashboard knows what is new.</p>
       </div>
 
       <div className="grid3">
@@ -100,7 +100,7 @@ export default function Brain() {
       >
         <input type="file" accept=".zip" hidden onChange={(e) => e.target.files?.[0] && uploadZip(e.target.files[0])} />
         <h2>Upload vault</h2>
-        <p className="muted">Drop your <b>Second Brain .zip</b> here, or click to choose it. Only your notes are read; photos stay on your computer.</p>
+        <p className="muted">Drop your <b>Growth Brain .zip</b> here, or click to choose it. Only your notes are read; photos stay on your computer.</p>
         {busy && <p className="row" style={{ justifyContent: 'center' }}><span className="spinner" /> {busy}</p>}
       </label>
       {msg && <div className="note">✓ {msg}</div>}

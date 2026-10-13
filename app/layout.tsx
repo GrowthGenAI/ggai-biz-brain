@@ -4,7 +4,7 @@ import { APP_BYLINE, APP_NAME } from '@/lib/appbrand';
 
 export const metadata: Metadata = {
   title: APP_NAME,
-  description: `Your second brain for on-brand content. ${APP_BYLINE}`,
+  description: `Your Growth Brain for on-brand content. ${APP_BYLINE}`,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
