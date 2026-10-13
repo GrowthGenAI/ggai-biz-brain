@@ -34,10 +34,21 @@ Everything carries the client's brand and Growth GenAI skills only.
 17. Once a week: zip the folder → Upload vault again.
 
 ## Optional add-ons (switch on per client)
-18. **Planner + auto-posting** (approve & schedule, daily 9 AM IST posting, CSV sheet):
-    LinkedIn developer app (OpenID Connect + Share on LinkedIn, redirect /api/linkedin/callback),
-    Instagram Business account + Meta app (Instagram API with Instagram login, redirect /api/instagram/callback),
-    Vercel keys LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET, INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET, CRON_SECRET → Planner → Connect.
+18. **Planner + auto-posting** (approve & schedule, daily 9 AM IST posting, CSV sheet). Switch on only when the client is ready.
+    **A. LinkedIn app (15 min)**
+    1. linkedin.com/developers/apps → Create app → name `[Brand] Brain`, LinkedIn Page = the client's company page, logo → Create.
+    2. Products tab → Request access: **Sign In with LinkedIn using OpenID Connect** and **Share on LinkedIn**.
+    3. Auth tab → Authorized redirect URLs → add `https://[client-domain]/api/linkedin/callback`.
+    4. Copy Client ID and Client Secret (client types them into Vercel, never into chat).
+    **B. Instagram (20 min)**
+    1. Instagram app → profile → ☰ → Account type and tools → Switch to professional account → Business.
+    2. developers.facebook.com → My Apps → Create app → use case **Manage messaging & content on Instagram**.
+    3. Instagram → API setup with Instagram login → Add account; Business login redirect URL `https://[client-domain]/api/instagram/callback`.
+    4. Copy the Instagram app ID and app secret.
+    **C. Vercel keys** (Settings → Environment Variables): `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `CRON_SECRET` (any long random text) → Redeploy.
+    **D. Connect**: dashboard → Planner → Connect LinkedIn → Connect Instagram (both cards show Connected).
+    **E. Use it**: on any text post, carousel or image → Approve & schedule → tick LinkedIn / Instagram → date → edit captions → Schedule (or Post now). Planner shows Scheduled → Posted with links; Download sheet (CSV) for the monthly tracker.
+    **Checks**: before keys are added, Planner shows "Add LINKEDIN_CLIENT_ID…" and any test row shows Failed: that is expected; remove test rows. LinkedIn connection lasts 60 days (Reconnect from the Planner); Instagram renews itself weekly; Instagram API posts max 10 slides.
 19. Outreach (prospect-magnet skill + tracker), masterclasses, AI video clone: separate offers.
 
 ## Rules
