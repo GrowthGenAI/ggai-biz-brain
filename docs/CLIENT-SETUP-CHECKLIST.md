@@ -36,10 +36,17 @@ Everything carries the client's brand and Growth GenAI skills only.
 ## Optional add-ons (switch on per client)
 18. **Planner + auto-posting** (approve & schedule, daily 9 AM IST posting, CSV sheet). Switch on only when the client is ready.
     **A. LinkedIn app (15 min)**
-    1. linkedin.com/developers/apps → Create app → name `[Brand] Brain`, LinkedIn Page = the client's company page, logo → Create.
-    2. Products tab → Request access: **Sign In with LinkedIn using OpenID Connect** and **Share on LinkedIn**.
-    3. Auth tab → Authorized redirect URLs → add `https://[client-domain]/api/linkedin/callback`.
-    4. Copy Client ID and Client Secret (client types them into Vercel, never into chat).
+    1. linkedin.com/developers/apps → Create app → name `[Brand] Brain`, LinkedIn Page = the client's company page
+       (no page yet? LinkedIn → For Business → Create a Company Page), logo, tick the agreement → Create app.
+    2. If asked, Verify the app: Settings → Verify → Generate URL → open it as the page admin → Verify.
+    3. Products tab → Request access: **Sign In with LinkedIn using OpenID Connect** and **Share on LinkedIn** (both show Added).
+    4. Auth tab → OAuth 2.0 settings → Authorized redirect URLs → ✏️ → Add → `https://[client-domain]/api/linkedin/callback` → Update.
+    5. Auth tab shows Client ID and Client Secret (eye icon to reveal). The client copies them; never into chat.
+    6. Vercel → project → Settings → **Environments → Production** → Environment Variables → **Add** (type Secret, environment Production):
+       `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `CRON_SECRET` (any long random text) → use "+ Add new variable" for each → Save.
+       Ignore "Needs Attention" on BLOB_READ_WRITE_TOKEN; never click Rotate Blob Credentials (it breaks uploads).
+    7. Redeploy (Deployments → ⋯ → Redeploy, or an empty commit push).
+    8. Dashboard → Planner → Connect LinkedIn → Allow → card shows Connected. Test: a text post → Approve & schedule → untick Instagram → Post now → row shows Posted with a link.
     **B. Instagram (20 min)**
     1. Instagram app → profile → ☰ → Account type and tools → Switch to professional account → Business.
     2. developers.facebook.com → My Apps → Create app → use case **Manage messaging & content on Instagram**.
