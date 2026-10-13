@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { APP_BYLINE, APP_LOGO, APP_NAME } from '@/lib/appbrand';
 
 const NAV = [
+  { href: '/command', label: '✧ Command Centre' },
   { href: '/', label: '✦ Studio' },
   { href: '/brain', label: '◎ Brain' },
   { href: '/brand', label: '◆ Brand Kit' },
