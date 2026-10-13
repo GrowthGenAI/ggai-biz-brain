@@ -4,6 +4,7 @@ import Link from 'next/link';
 import OutputView from '@/components/OutputView';
 import BrainField from '@/components/BrainField';
 import { EMPTY_BRAND, type BrandKit, type Output } from '@/lib/types';
+import { COMMANDS } from '@/lib/commands';
 
 type Lane = 'strategist' | 'research' | 'content' | 'brain';
 type Route = { lane: Lane; command: string; reason: string };
@@ -13,6 +14,16 @@ function md(t: string) {
   const esc = String(t || '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
   return esc.replace(/^#{1,3}\s*(.+)$/gm, '<b>$1</b>').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
 }
+
+const EXAMPLES: Record<string, string> = {
+  '/carousel': 'e.g. 7 slides on why founders do not have a pipeline problem',
+  '/leadmagnet': 'e.g. a 1-page checklist: is your business ready for automation?',
+  '/image': 'e.g. the moment I stopped chasing leads by hand',
+  '/text': 'e.g. a contrarian take on cold outreach',
+  '/reel': 'e.g. 30 seconds on my weekly content routine',
+  '/video': 'e.g. 10 minutes on building a client journey',
+  '/newsletter': 'e.g. what I learned helping founders automate this month',
+};
 
 const FORMATS = [
   { cmd: '/text', label: 'Text', icon: '¶', doing: 'Writing the post' },
@@ -44,6 +55,7 @@ export default function CommandCentre() {
   const [listening, setListening] = useState(false);
   const [clock, setClock] = useState('');
   const [scale, setScale] = useState(1);
+  const [menuIndex, setMenuIndex] = useState(0);
   const board = useRef<HTMLDivElement>(null);
   const rec = useRef<any>(null);
 
@@ -139,6 +151,15 @@ export default function CommandCentre() {
     r.start();
   }
 
+  const typing = /^\/\S*$/.test(input.trim()) && !input.includes(' ');
+  const q = input.trim().toLowerCase();
+  const matches = COMMANDS.filter((c) => c.cmd.startsWith(q) || c.aliases.some((a) => a.startsWith(q)));
+  const showMenu = typing && matches.length > 0;
+  function choose(cmd: string) {
+    setInput(cmd + ' ');
+    setMenuIndex(0);
+  }
+
   const busy = stage === 'route' || stage === 'research' || stage === 'make';
   const lane = route?.lane;
   const on = {
@@ -217,6 +238,12 @@ export default function CommandCentre() {
         .cc-btn { border: 0; border-radius: 10px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
         .cc-mic { background: #18224a; color: #cfd6ea; } .cc-mic.on { background: #e8603c; color: #fff; }
         .cc-go { background: #f2b33d; color: #10172f; } .cc-go:disabled { opacity: .45; }
+        .cc-menu { position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); background: #0c1328f7; border: 1px solid #2a3760; border-radius: 14px; padding: 8px; z-index: 5; box-shadow: 0 20px 50px #0009; backdrop-filter: blur(6px); }
+        .cc-menu button { display: flex; gap: 12px; align-items: center; width: 100%; text-align: left; background: transparent; border: 0; color: #e9ecf5; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+        .cc-menu button.on { background: #18224a; }
+        .cc-menu b { font-family: ui-monospace, Menlo, monospace; font-size: 14px; } .cc-menu em { font-style: normal; color: #8592b8; font-size: 12px; margin-left: 6px; }
+        .cc-menu small { display: block; color: #7d89ad; font-size: 12px; margin-top: 2px; }
+        .cc-mi { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: #18224a; color: #f2b33d; flex: none; }
         .cc-opts { display: flex; gap: 14px; align-items: center; margin-top: 8px; font-size: 12px; color: #8592b8; }
         .cc-panel { position: relative; border: 1px solid #25325a; border-radius: 18px; background: radial-gradient(500px 400px at 50% 40%, #1a1440 0%, #0a0f22 70%); overflow: hidden; min-height: 560px; display: flex; flex-direction: column; }
         .cc-field { flex: 1; min-height: 360px; }
@@ -268,6 +295,24 @@ export default function CommandCentre() {
             </div>
           </div>
 
+          <div style={{ position: 'relative' }}>
+          {showMenu && (
+            <div className="cc-menu">
+              <div className="cc-sub" style={{ padding: '4px 10px 8px' }}>Commands</div>
+              {matches.map((c, i) => {
+                const f = FORMATS.find((x) => x.cmd === c.cmd);
+                return (
+                  <button key={c.cmd} className={i === menuIndex ? 'on' : ''} onMouseEnter={() => setMenuIndex(i)} onMouseDown={(e) => { e.preventDefault(); choose(c.cmd); }}>
+                    <span className="cc-mi">{f?.icon || '•'}</span>
+                    <span>
+                      <b>{c.cmd}</b> <em>{c.label}</em>
+                      <small>{c.hint} · {EXAMPLES[c.cmd] || ''}</small>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <div className="cc-box">
             <textarea
               rows={2}
@@ -275,10 +320,19 @@ export default function CommandCentre() {
               value={input}
               disabled={busy}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+              onKeyDown={(e) => {
+                if (showMenu) {
+                  if (e.key === 'ArrowDown') { e.preventDefault(); setMenuIndex((i) => (i + 1) % matches.length); return; }
+                  if (e.key === 'ArrowUp') { e.preventDefault(); setMenuIndex((i) => (i - 1 + matches.length) % matches.length); return; }
+                  if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); choose(matches[Math.min(menuIndex, matches.length - 1)].cmd); return; }
+                  if (e.key === 'Escape') { setInput(''); return; }
+                }
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+              }}
             />
             <button className={`cc-btn cc-mic ${listening ? 'on' : ''}`} onClick={mic} title="Speak">{listening ? '■' : '🎙'}</button>
-            <button className="cc-btn cc-go" disabled={busy || !input.trim()} onClick={() => send()}>↑</button>
+            <button className="cc-btn cc-go" disabled={busy || !input.trim() || showMenu} onClick={() => send()}>↑</button>
+          </div>
           </div>
           <div className="cc-opts">
             <label className="row" style={{ gap: 6 }}><input type="checkbox" checked={pictures} onChange={(e) => setPictures(e.target.checked)} /> Draw AI pictures on carousel slides (uses your OpenAI key, a few minutes)</label>
