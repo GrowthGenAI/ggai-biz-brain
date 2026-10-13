@@ -35,32 +35,47 @@ Everything carries the client's brand and Growth GenAI skills only.
 
 ## Optional add-ons (switch on per client)
 18. **Planner + auto-posting** (approve & schedule, daily 9 AM IST posting, CSV sheet). Switch on only when the client is ready.
+
+    **Simple route for clients (recommended): reuse the GGAI apps, the client only presses Connect.**
+    Growth GenAI already owns one LinkedIn app (Growth GenAI Brain) and one Meta app (GGAI Brain Poster).
+    For each new client dashboard:
+    a. LinkedIn app → Auth → Authorized redirect URLs → add `https://[client-domain]/api/linkedin/callback`.
+    b. Meta app → API setup with Instagram login → Business login settings → add `https://[client-domain]/api/instagram/callback`.
+    c. Meta app → App roles → Roles → Add people → **Instagram Tester** → client's Instagram username.
+       Client accepts at instagram.com/accounts/manage_access → Tester Invites → Accept. (Until the app passes Meta App Review.)
+    d. Client's Vercel → Settings → Environments → Production → Add (Secret): the same `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`,
+       `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, plus their own `CRON_SECRET` → Save → Redeploy.
+    e. Client: dashboard → Planner → Connect LinkedIn → Allow; Connect Instagram → Allow. Done.
+    Client's Instagram must be a professional account first (check: instagram.com → Profile shows "Professional dashboard";
+    switch on the phone app: ☰ → Settings and privacy → For professionals → Account type and tools → Switch to professional account → Business).
+
+    **Full route (a client who wants their own apps)**
     **A. LinkedIn app (15 min)**
     1. linkedin.com/developers/apps → Create app → name `[Brand] Brain`, LinkedIn Page = the client's company page
        (no page yet? LinkedIn → For Business → Create a Company Page), logo, tick the agreement → Create app.
     2. If asked, Verify the app: Settings → Verify → Generate URL → open it as the page admin → Verify.
     3. Products tab → Request access: **Sign In with LinkedIn using OpenID Connect** and **Share on LinkedIn** (both show Added).
     4. Auth tab → OAuth 2.0 settings → Authorized redirect URLs → ✏️ → Add → `https://[client-domain]/api/linkedin/callback` → Update.
-    5. Auth tab shows Client ID and Client Secret (eye icon to reveal). The client copies them; never into chat.
-    6. Vercel → project → Settings → **Environments → Production** → Environment Variables → **Add** (type Secret, environment Production):
-       `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `CRON_SECRET` (any long random text) → use "+ Add new variable" for each → Save.
-       Ignore "Needs Attention" on BLOB_READ_WRITE_TOKEN; never click Rotate Blob Credentials (it breaks uploads).
-    7. Redeploy (Deployments → ⋯ → Redeploy, or an empty commit push).
-    8. Dashboard → Planner → Connect LinkedIn → Allow → card shows Connected. Test: a text post → Approve & schedule → untick Instagram → Post now → row shows Posted with a link.
+    5. Auth tab shows Client ID and Client Secret (eye icon). The client copies them; never into chat.
     **B. Instagram (20 min)**
-    1. **Check / switch to a professional account first.**
-       Check on laptop: instagram.com → Profile. "Professional dashboard" or a category under the name = already professional → skip to step 2.
-       Switch on the phone app (the laptop site often hides it): profile picture → ☰ → Settings and privacy → For professionals →
-       Account type and tools → Switch to professional account → pick a category → Business → Done.
-    2. developers.facebook.com → log in with Facebook → My Apps → Create App (first time: register as a developer, verify phone/email).
-       Name `[Brand] Brain` → use case **Manage messaging & content on Instagram** → business portfolio (or skip) → Create app.
-    3. Use cases → Customize (Instagram) → **API setup with Instagram login** → Generate access tokens → Add account → log in to the client's Instagram → Allow.
-    4. Set up Instagram business login → Business login settings → OAuth redirect URIs → `https://[client-domain]/api/instagram/callback` → Save.
-    5. Copy the **Instagram app ID** and **Instagram app secret** (Show) from that page, not the main Facebook App ID.
-    **C. Vercel keys** (Settings → Environment Variables): `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `CRON_SECRET` (any long random text) → Redeploy.
-    **D. Connect**: dashboard → Planner → Connect LinkedIn → Connect Instagram (both cards show Connected).
-    **E. Use it**: on any text post, carousel or image → Approve & schedule → tick LinkedIn / Instagram → date → edit captions → Schedule (or Post now). Planner shows Scheduled → Posted with links; Download sheet (CSV) for the monthly tracker.
-    **Checks**: before keys are added, Planner shows "Add LINKEDIN_CLIENT_ID…" and any test row shows Failed: that is expected; remove test rows. LinkedIn connection lasts 60 days (Reconnect from the Planner); Instagram renews itself weekly; Instagram API posts max 10 slides.
+    1. Professional account check / switch (see above).
+    2. developers.facebook.com/apps → Create App → name → on "Add use cases" click the **Content management** filter (not Featured) →
+       tick **Manage messaging & content on Instagram** → Next → business portfolio (the client's verified one) → Next → Create app.
+       (If the app shows "App type: None" with only "Instagram Graph API → Business API settings", it was made without the use case: create a new app.)
+    3. Use cases → Customize (Instagram) → **API setup with Instagram login**:
+       - Section 1: Add all required permissions. Then Permissions and features → `instagram_business_content_publish` → + Add ("Ready for testing" is fine).
+       - Section 2: Roles → Add people → Instagram Tester → the Instagram username → accept at instagram.com/accounts/manage_access → Tester Invites → Accept.
+       - Section 3 (webhooks): skip.
+       - Section 4: Set up Instagram business login → Redirect URL `https://[client-domain]/api/instagram/callback` → Save.
+       - Copy **Instagram app ID** and **Instagram app secret** (Show) from the top of this page, not the Facebook App ID.
+    **C. Vercel keys**: Settings → Environments → Production → Environment Variables → Add (Secret) → "+ Add new variable" for each:
+       `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `CRON_SECRET` → Save → Redeploy.
+       Ignore "Needs Attention" on BLOB_READ_WRITE_TOKEN; never click Rotate Blob Credentials.
+    **D. Connect**: Planner → Connect LinkedIn → Allow; Connect Instagram → Allow (cards show Connected).
+    **E. Use it**: any text post, carousel or image → Approve & schedule → tick LinkedIn / Instagram → date → edit captions → Schedule (or Post now).
+       Planner shows Scheduled → Posted with links; Download sheet (CSV) for the monthly tracker.
+    **Checks**: before keys are added the Planner shows a red "Add …" banner and test rows show Failed (expected; remove them).
+       LinkedIn connection lasts 60 days (Reconnect from the Planner); Instagram renews itself weekly; Instagram API posts max 10 slides.
 19. Outreach (prospect-magnet skill + tracker), masterclasses, AI video clone: separate offers.
 
 ## Rules
