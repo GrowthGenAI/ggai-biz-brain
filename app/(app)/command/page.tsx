@@ -1,11 +1,13 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import OutputView from '@/components/OutputView';
+import BrainField from '@/components/BrainField';
 import { EMPTY_BRAND, type BrandKit, type Output } from '@/lib/types';
 
 type Lane = 'strategist' | 'research' | 'content' | 'brain';
 type Route = { lane: Lane; command: string; reason: string };
+type Bubble = { tag: string; text: string; tone: 'route' | 'work' | 'report' | 'online' | 'done' } | null;
 
 function md(t: string) {
   const esc = String(t || '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
@@ -13,74 +15,115 @@ function md(t: string) {
 }
 
 const FORMATS = [
-  { cmd: '/text', label: 'Text post', icon: '¶' },
-  { cmd: '/image', label: 'Image', icon: '▣' },
-  { cmd: '/carousel', label: 'Carousel', icon: '❐' },
-  { cmd: '/leadmagnet', label: 'Lead magnet', icon: '◈' },
-  { cmd: '/reel', label: 'Reel', icon: '▶' },
-  { cmd: '/video', label: 'Long video', icon: '◉' },
-  { cmd: '/newsletter', label: 'Newsletter', icon: '✉' },
+  { cmd: '/text', label: 'Text', icon: '¶', doing: 'Writing the post' },
+  { cmd: '/image', label: 'Picture', icon: '▣', doing: 'Writing and art-directing the image' },
+  { cmd: '/carousel', label: 'Carousel', icon: '❐', doing: 'Writing and art-directing the slides' },
+  { cmd: '/leadmagnet', label: 'Lead magnet', icon: '◈', doing: 'Building the free guide' },
+  { cmd: '/reel', label: 'Reels', icon: '▶', doing: 'Scripting the reel' },
+  { cmd: '/video', label: 'Long-form', icon: '◉', doing: 'Scripting the long video' },
+  { cmd: '/newsletter', label: 'Newsletter', icon: '✉', doing: 'Writing the newsletter' },
 ];
 
-const TEAM: Record<string, { title: string; sub: string; about: string }> = {
-  chief: { title: 'Chief', sub: 'Reads every note', about: 'Your chief reads your whole brain and hands each job to the right person. Give it one instruction.' },
-  strategist: { title: 'Strategist', sub: 'Marketing decisions', about: 'Your CMO: positioning, offers, funnels and what to post next, built from your own notes.' },
-  research: { title: 'Research', sub: 'Angles & ideas', about: 'Finds angles, hooks, objections and gaps from your notes. It does not browse the internet.' },
-  content: { title: 'Content', sub: 'Posts in your voice', about: 'Writes every format in your voice and your Brand Kit colours.' },
-};
+// Fixed drawing board, scaled to fit.
+const W = 780, H = 640;
+const BOX = { chief: { x: 240, y: 30, w: 300, h: 96 }, strategist: { x: 40, y: 210, w: 230, h: 84 }, research: { x: 510, y: 210, w: 230, h: 84 }, content: { x: 275, y: 390, w: 230, h: 84 } };
+const FX = (i: number) => 14 + i * 108; // format boxes: 7 × 96 wide
+const FY = 556;
 
 export default function CommandCentre() {
   const [brand, setBrand] = useState<BrandKit>(EMPTY_BRAND);
+  const [notes, setNotes] = useState<{ id: string; links: string[] }[]>([]);
   const [input, setInput] = useState('');
   const [route, setRoute] = useState<Route | null>(null);
-  const [stage, setStage] = useState<'idle' | 'routing' | 'working' | 'done'>('idle');
+  const [stage, setStage] = useState<'idle' | 'route' | 'research' | 'make' | 'done'>('idle');
+  const [bubbles, setBubbles] = useState<Record<string, Bubble>>({});
+  const [active, setActive] = useState<string[]>([]);
   const [out, setOut] = useState<Output | null>(null);
   const [err, setErr] = useState('');
-  const [focus, setFocus] = useState<keyof typeof TEAM>('chief');
+  const [pictures, setPictures] = useState(false);
   const [listening, setListening] = useState(false);
   const [clock, setClock] = useState('');
-  const box = useRef<HTMLTextAreaElement>(null);
+  const [scale, setScale] = useState(1);
+  const board = useRef<HTMLDivElement>(null);
   const rec = useRef<any>(null);
 
   useEffect(() => {
     fetch('/api/brand').then((r) => r.json()).then(setBrand).catch(() => {});
-    const t = () => setClock(new Date().toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }));
+    fetch('/api/vault').then((r) => r.json()).then((v) => setNotes((v.notes || []).map((n: any) => ({ id: n.id, links: n.links || [] })))).catch(() => {});
+    const t = () => setClock(new Date().toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     t();
-    const i = setInterval(t, 30000);
+    const i = setInterval(t, 1000);
     return () => clearInterval(i);
   }, []);
 
+  useLayoutEffect(() => {
+    const el = board.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setScale(Math.min(1, el.clientWidth / W)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const say = (node: string, b: Bubble) => setBubbles((x) => ({ ...x, [node]: b }));
+  const sample = (k: number) => [...notes].sort(() => Math.random() - 0.5).slice(0, k).map((n) => n.id);
+
+  async function call(body: object) {
+    const r = await fetch('/api/command', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Something went wrong.');
+    return j;
+  }
+
   async function send(text = input) {
     const t = text.trim();
-    if (!t || stage === 'routing' || stage === 'working') return;
-    setErr('');
-    setOut(null);
-    setRoute(null);
-    setStage('routing');
-    setFocus('chief');
+    if (!t || (stage !== 'idle' && stage !== 'done')) return;
+    setErr(''); setOut(null); setRoute(null); setBubbles({});
+    setStage('route');
+    setActive(sample(8));
+    say('chief', { tag: 'Reading', text: 'Reading your instruction and your notes', tone: 'work' });
     try {
-      const r1 = await fetch('/api/command', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ input: t, step: 'route' }) });
-      const j1 = await r1.json();
-      if (!r1.ok) throw new Error(j1.error);
-      setRoute(j1.route);
-      setFocus(j1.route.lane === 'brain' ? 'chief' : j1.route.lane);
-      setStage('working');
-      const r2 = await fetch('/api/command', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ input: t, route: j1.route }) });
-      const j2 = await r2.json();
-      if (!r2.ok) throw new Error(j2.error);
-      setOut(j2.output);
+      const { route: r } = await call({ input: t, step: 'route' });
+      setRoute(r);
+      const fmt = FORMATS.find((f) => f.cmd === r.command);
+      let brief: any = null;
+
+      if (r.lane === 'content') {
+        say('chief', { tag: 'Route', text: `${r.command}: Research sharpens the angle, then Content writes`, tone: 'route' });
+        setStage('research');
+        say('research', { tag: 'Working', text: 'Finding the strongest angle in your notes', tone: 'work' });
+        say('strategist', { tag: 'Working', text: 'Delegating to 1 content producer', tone: 'work' });
+        setActive(sample(14));
+        ({ brief } = await call({ input: t, step: 'research', route: r }));
+        setActive(brief.notes?.length ? brief.notes : sample(10));
+        say('research', { tag: '↑ Report', text: `Research → Chief: brief delivered${brief.angle ? `: ${brief.angle.slice(0, 70)}${brief.angle.length > 70 ? '…' : ''}` : ''}`, tone: 'report' });
+        say('content', { tag: 'Online', text: `${fmt?.doing || 'Writing'} in your voice`, tone: 'online' });
+      } else {
+        const who = r.lane === 'brain' ? 'chief' : r.lane;
+        say('chief', { tag: 'Route', text: r.reason || `Handing this to ${r.lane}`, tone: 'route' });
+        if (who !== 'chief') say(who, { tag: 'Working', text: r.lane === 'strategist' ? 'Building your plan from your notes' : 'Collecting angles from your notes', tone: 'work' });
+        setActive(sample(14));
+      }
+
+      setStage('make');
+      const { output } = await call({ input: t, step: 'make', route: r, brief });
+      setOut(output);
+      setActive(output.sources || []);
       setStage('done');
       setInput('');
+      if (r.lane === 'content') {
+        say('content', { tag: 'Done', text: `${fmt?.label || 'Piece'} delivered to the Chief`, tone: 'done' });
+        say('strategist', { tag: 'Done', text: 'Delivered', tone: 'done' });
+      } else if (r.lane !== 'brain') say(r.lane, { tag: '↑ Report', text: 'Delivered to the Chief', tone: 'report' });
+      say('chief', { tag: 'Done', text: 'Ready on the right. Approve it or send it to Content.', tone: 'done' });
     } catch (e: any) {
       setErr(e.message || 'Something went wrong.');
       setStage('idle');
+      setBubbles({});
     }
   }
 
   function pickFormat(cmd: string) {
     setInput((v) => `${cmd} ${v.replace(/^\/\S+\s*/, '')}`);
-    setFocus('content');
-    box.current?.focus();
   }
 
   function mic() {
@@ -89,7 +132,6 @@ export default function CommandCentre() {
     if (listening) return rec.current?.stop();
     const r = new SR();
     r.lang = 'en-IN';
-    r.interimResults = false;
     r.onresult = (e: any) => setInput((v) => `${v} ${e.results[0][0].transcript}`.trim());
     r.onend = () => setListening(false);
     rec.current = r;
@@ -97,127 +139,187 @@ export default function CommandCentre() {
     r.start();
   }
 
-  const busy = stage === 'routing' || stage === 'working';
-  const lit = (node: string) => {
-    if (!route) return node === 'chief' && busy;
-    if (node === 'chief') return true;
-    if (route.lane === 'content') return node === 'content' || node === route.command;
-    return node === route.lane;
+  const busy = stage === 'route' || stage === 'research' || stage === 'make';
+  const lane = route?.lane;
+  const on = {
+    chief: stage !== 'idle',
+    strategist: lane === 'strategist' || lane === 'content',
+    research: lane === 'research' || lane === 'content',
+    content: lane === 'content',
   };
-  const Node = ({ id, icon }: { id: keyof typeof TEAM; icon: string }) => (
-    <button className={`cc-node ${lit(id) ? 'lit' : ''} ${busy && lit(id) ? 'pulse' : ''} ${id === 'chief' ? 'chief' : ''}`} onClick={() => setFocus(id)}>
-      <span className="cc-ico">{icon}</span>
-      <span><b>{TEAM[id].title}</b><small>{TEAM[id].sub}</small></span>
-    </button>
-  );
+  const fmt = FORMATS.find((f) => f.cmd === route?.command);
   const actions: any[] = out?.kind === 'answer' && Array.isArray(out.data?.nextActions) ? out.data.nextActions : [];
+
+  const Box = ({ id, icon, title, sub, big }: { id: keyof typeof BOX; icon: string; title: string; sub: string; big?: boolean }) => {
+    const b = BOX[id];
+    return (
+      <div className={`cc-node ${on[id] ? 'on' : ''} ${busy && on[id] ? 'pulse' : ''} cc-${id}`} style={{ left: b.x, top: b.y, width: b.w, height: b.h }}>
+        <span className="cc-ico" style={big ? { width: 52, height: 52, fontSize: 22 } : undefined}>{icon}</span>
+        <span>{big && <small className="cc-kicker">AI CHIEF</small>}<b style={big ? { fontSize: 22 } : undefined}>{title}</b><small>{sub}</small></span>
+      </div>
+    );
+  };
+  const Bub = ({ id, x, y }: { id: string; x: number; y: number }) => {
+    const b = bubbles[id];
+    if (!b) return null;
+    return (
+      <div className={`cc-bub ${b.tone}`} style={{ left: x, top: y }}>
+        <small>● {b.tag}</small>
+        <div>{b.text}</div>
+      </div>
+    );
+  };
+  const path = (d: string, live: boolean, dashed = false) => <path d={d} className={`${live ? 'live' : ''} ${dashed ? 'dash' : ''}`} />;
+  const cx = (k: keyof typeof BOX) => BOX[k].x + BOX[k].w / 2;
+  const fi = FORMATS.findIndex((f) => f.cmd === route?.command);
 
   return (
     <div className="cc">
       <style>{`
-        .cc { background: radial-gradient(1200px 600px at 30% -10%, #26365e 0%, #141c33 55%, #0e1426 100%); border-radius: 18px; padding: 22px; color: #e9ecf5; min-height: calc(100vh - 80px); }
-        .cc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-        .cc-top h1 { color: #fff; margin: 0; font-size: 22px; letter-spacing: .02em; }
-        .cc-state { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; border: 1px solid #3a4a74; color: #b9c3dd; }
-        .cc-state.on { border-color: #f2b33d; color: #f2b33d; }
-        .cc-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; }
-        @media (max-width: 1000px) { .cc-grid { grid-template-columns: 1fr; } }
-        .cc-org { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 8px 0 4px; }
-        .cc-row { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
-        .cc-line { width: 2px; height: 26px; background: linear-gradient(#3a4a74, #3a4a74); }
-        .cc-line.lit { background: #f2b33d; box-shadow: 0 0 10px #f2b33d88; }
-        .cc-node { display: flex; align-items: center; gap: 12px; text-align: left; background: #182240; border: 1px solid #2c3a63; color: #e9ecf5; border-radius: 14px; padding: 12px 16px; min-width: 190px; cursor: pointer; transition: all .25s; }
-        .cc-node b { display: block; font-size: 15px; } .cc-node small { color: #93a0c3; font-size: 12px; }
-        .cc-node.chief { min-width: 260px; padding: 16px 20px; }
-        .cc-node.lit { border-color: #f2b33d; box-shadow: 0 0 0 1px #f2b33d55, 0 0 26px #f2b33d33; }
-        .cc-node.pulse { animation: ccp 1.2s ease-in-out infinite; }
-        @keyframes ccp { 50% { box-shadow: 0 0 0 1px #f2b33d, 0 0 38px #f2b33d66; } }
-        .cc-ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: #223060; color: #f2b33d; font-size: 16px; }
-        .cc-fmt { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; width: 100%; margin-top: 2px; }
-        @media (max-width: 700px) { .cc-fmt { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-        .cc-f { background: #141d38; border: 1px solid #2c3a63; color: #cfd6ea; border-radius: 12px; padding: 10px 4px; font-size: 12px; cursor: pointer; transition: all .25s; }
-        .cc-f span { display: block; font-size: 18px; color: #f2b33d; margin-bottom: 4px; }
-        .cc-f.lit { border-color: #f2b33d; color: #fff; box-shadow: 0 0 18px #f2b33d33; }
-        .cc-box { margin-top: 18px; background: #101830; border: 1px solid #2c3a63; border-radius: 14px; padding: 10px; display: flex; gap: 8px; align-items: flex-end; }
-        .cc-box textarea { flex: 1; background: transparent; border: 0; color: #fff; resize: none; font: inherit; font-size: 15px; min-height: 48px; outline: none; padding: 6px; }
-        .cc-box textarea::placeholder { color: #7f8bb0; }
+        .cc { background: radial-gradient(900px 500px at 35% 0%, #17224a 0%, #0b1022 55%, #070a16 100%); border-radius: 18px; padding: 18px 20px 20px; color: #e9ecf5; min-height: calc(100vh - 70px); display: flex; flex-direction: column; }
+        .cc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .cc-brand { letter-spacing: .28em; font-weight: 700; font-size: 14px; color: #fff; display: flex; gap: 10px; align-items: center; }
+        .cc-brand img { width: 28px; height: 28px; border-radius: 8px; background: #fff; padding: 3px; }
+        .cc-sub { letter-spacing: .2em; font-size: 10px; color: #7d89ad; text-transform: uppercase; }
+        .cc-clock { font-size: 11px; letter-spacing: .14em; color: #7d89ad; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+        .cc-state { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; border: 1px solid #2a3760; color: #9aa6c9; }
+        .cc-state.on { border-color: #2fd3b5; color: #2fd3b5; box-shadow: 0 0 14px #2fd3b555; }
+        .cc-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; flex: 1; }
+        @media (max-width: 1100px) { .cc-grid { grid-template-columns: 1fr; } }
+        .cc-board { position: relative; width: 100%; }
+        .cc-canvas { position: absolute; left: 0; top: 0; width: ${W}px; height: ${H}px; transform-origin: top left; }
+        .cc-canvas svg { position: absolute; inset: 0; overflow: visible; }
+        .cc-canvas path { fill: none; stroke: #26335c; stroke-width: 1.6; transition: stroke .4s; }
+        .cc-canvas path.dash { stroke-dasharray: 4 6; }
+        .cc-canvas path.live { stroke: #f2b33d; stroke-dasharray: 6 8; animation: ccflow 1s linear infinite; filter: drop-shadow(0 0 4px #f2b33d99); }
+        @keyframes ccflow { to { stroke-dashoffset: -28; } }
+        .cc-node { position: absolute; display: flex; align-items: center; gap: 14px; background: linear-gradient(180deg, #141d3a, #0f162e); border: 1px solid #25325a; border-radius: 14px; padding: 0 18px; box-sizing: border-box; transition: all .35s; }
+        .cc-node b { display: block; font-size: 17px; color: #fff; } .cc-node small { display: block; color: #8592b8; font-size: 12px; }
+        .cc-kicker { color: #2fd3b5 !important; letter-spacing: .2em; font-size: 10px !important; font-weight: 700; }
+        .cc-node.on { border-color: #f2b33d99; box-shadow: 0 0 0 1px #f2b33d33, 0 0 30px #f2b33d22; }
+        .cc-chief.on { border-color: #2fd3b5; box-shadow: 0 0 0 1px #2fd3b555, 0 0 40px #2fd3b533; }
+        .cc-node.pulse { animation: ccp 1.4s ease-in-out infinite; }
+        @keyframes ccp { 50% { box-shadow: 0 0 0 1px #f2b33d, 0 0 46px #f2b33d55; } }
+        .cc-ico { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: #1b2650; color: #f2b33d; font-size: 17px; flex: none; border: 1px solid #2d3b6a; }
+        .cc-chief .cc-ico { color: #2fd3b5; }
+        .cc-f { position: absolute; top: ${FY}px; width: 96px; height: 74px; background: #0f162e; border: 1px solid #222e55; color: #aab4d4; border-radius: 12px; font-size: 12px; cursor: pointer; transition: all .3s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+        .cc-f span { font-size: 18px; color: #6f7ca3; }
+        .cc-f:hover { border-color: #3a4a80; color: #fff; }
+        .cc-f.on { border-color: #e06bd8; color: #fff; box-shadow: 0 0 0 2px #2fd3b5aa, 0 0 26px #e06bd855; }
+        .cc-f.on span { color: #e06bd8; }
+        .cc-bub { position: absolute; width: 200px; background: #0c1328ee; border: 1px solid #25325a; border-radius: 10px; padding: 8px 10px; font-size: 12px; line-height: 1.35; color: #dfe5f6; animation: ccin .35s ease-out; }
+        .cc-bub small { display: block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; margin-bottom: 3px; }
+        .cc-bub.route small { color: #2fd3b5; } .cc-bub.work small { color: #f2b33d; } .cc-bub.report small { color: #7fb2ff; } .cc-bub.online small { color: #e06bd8; } .cc-bub.done small { color: #4cd38a; }
+        @keyframes ccin { from { opacity: 0; transform: translateY(6px); } }
+        .cc-box { margin-top: 12px; background: #0d1430; border: 1px solid #25325a; border-radius: 14px; padding: 8px; display: flex; gap: 8px; align-items: flex-end; }
+        .cc-box textarea { flex: 1; background: transparent; border: 0; color: #fff; resize: none; font: inherit; font-size: 15px; min-height: 46px; outline: none; padding: 6px 8px; }
+        .cc-box textarea::placeholder { color: #67739a; }
         .cc-btn { border: 0; border-radius: 10px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
-        .cc-mic { background: #1d2850; color: #cfd6ea; } .cc-mic.on { background: #e8603c; color: #fff; }
-        .cc-go { background: #f2b33d; color: #141c33; } .cc-go:disabled { opacity: .5; }
-        .cc-panel { background: #fbf8f2; color: #1b1b1b; border-radius: 16px; padding: 18px; min-height: 420px; }
-        .cc-panel .out { border: 0; padding: 0; box-shadow: none; background: transparent; }
-        .cc-intro h3 { margin: 0 0 6px; } .cc-route { font-size: 13px; color: #4a4a52; margin-bottom: 12px; }
-        .cc-act { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+        .cc-mic { background: #18224a; color: #cfd6ea; } .cc-mic.on { background: #e8603c; color: #fff; }
+        .cc-go { background: #f2b33d; color: #10172f; } .cc-go:disabled { opacity: .45; }
+        .cc-opts { display: flex; gap: 14px; align-items: center; margin-top: 8px; font-size: 12px; color: #8592b8; }
+        .cc-panel { position: relative; border: 1px solid #25325a; border-radius: 18px; background: radial-gradient(500px 400px at 50% 40%, #1a1440 0%, #0a0f22 70%); overflow: hidden; min-height: 560px; display: flex; flex-direction: column; }
+        .cc-field { flex: 1; min-height: 360px; }
+        .cc-cap { text-align: center; padding: 0 20px 22px; }
+        .cc-cap b { display: block; color: #fff; font-size: 17px; margin-bottom: 4px; } .cc-cap span { color: #8d98bd; font-size: 13px; }
+        .cc-cap .tag { color: #e06bd8; letter-spacing: .16em; font-size: 11px; font-weight: 700; }
+        .cc-result { background: #fbf8f2; color: #1b1b1b; margin: 12px; border-radius: 14px; padding: 16px; overflow: auto; max-height: calc(100vh - 150px); }
+        .cc-result .out { border: 0; padding: 0; box-shadow: none; background: transparent; }
+        .cc-meta { font-size: 12px; color: #4a4a52; margin-bottom: 10px; }
       `}</style>
 
       <div className="cc-top">
-        <h1>Command Centre</h1>
-        <div className="row" style={{ gap: 10 }}>
-          <span className="muted" style={{ color: '#93a0c3', fontSize: 12 }}>{clock}</span>
-          <span className={`cc-state ${busy ? 'on' : ''}`}>● {stage === 'routing' ? 'Routing' : stage === 'working' ? 'Working' : 'Standby'}</span>
+        <div>
+          <div className="cc-brand">{brand.logoUrl && <img src={brand.logoUrl} alt="" />}COMMAND CENTRE</div>
+          <div className="cc-sub" style={{ marginTop: 6 }}>Your AI team</div>
+        </div>
+        <div className="row" style={{ gap: 12 }}>
+          <span className="cc-clock">{clock}</span>
+          <span className={`cc-state ${busy ? 'on' : ''}`}>● {busy ? 'Live run' : 'Standby'}</span>
         </div>
       </div>
 
       <div className="cc-grid">
         <div>
-          <div className="cc-org">
-            <Node id="chief" icon="✦" />
-            <div className={`cc-line ${route ? 'lit' : ''}`} />
-            <div className="cc-row">
-              <Node id="strategist" icon="◆" />
-              <Node id="research" icon="⌕" />
-              <Node id="content" icon="✎" />
-            </div>
-            <div className={`cc-line ${route?.lane === 'content' ? 'lit' : ''}`} />
-            <div className="cc-fmt">
-              {FORMATS.map((f) => (
-                <button key={f.cmd} className={`cc-f ${route?.command === f.cmd ? 'lit' : ''}`} onClick={() => pickFormat(f.cmd)} title={`Start with ${f.cmd}`}>
+          <div className="cc-board" ref={board} style={{ height: H * scale }}>
+            <div className="cc-canvas" style={{ transform: `scale(${scale})` }}>
+              <svg width={W} height={H}>
+                {path(`M${cx('chief')} 126 V170 H${cx('strategist')} V210`, on.strategist && busy)}
+                {path(`M${cx('chief')} 126 V170 H${cx('research')} V210`, on.research && busy)}
+                {path(`M270 252 H510`, lane === 'content' && busy, true)}
+                {path(`M${cx('strategist')} 294 V340 H${cx('content')} V390`, on.content && busy)}
+                {FORMATS.map((f, i) => (
+                  <g key={f.cmd}>{path(`M${cx('content')} 474 V515 H${FX(i) + 48} V${FY}`, fi === i && busy)}</g>
+                ))}
+              </svg>
+              <Box id="chief" icon="✦" title="Chief" sub="Reads every note" big />
+              <Box id="strategist" icon="◆" title="Strategist" sub="Marketing (CMO)" />
+              <Box id="research" icon="⌕" title="Research" sub="Angles & ideas" />
+              <Box id="content" icon="✎" title="Content" sub="Posts in your voice" />
+              {FORMATS.map((f, i) => (
+                <button key={f.cmd} className={`cc-f ${fi === i && stage !== 'idle' ? 'on' : ''}`} style={{ left: FX(i) }} onClick={() => pickFormat(f.cmd)} title={`Start with ${f.cmd}`}>
                   <span>{f.icon}</span>{f.label}
                 </button>
               ))}
+              <Bub id="chief" x={550} y={40} />
+              <Bub id="strategist" x={60} y={302} />
+              <Bub id="research" x={530} y={302} />
+              <Bub id="content" x={515} y={410} />
             </div>
           </div>
 
           <div className="cc-box">
             <textarea
-              ref={box}
               rows={2}
-              placeholder="Tell your team what you need. e.g. “Make a carousel on why referrals are not a pipeline” or “What should I post this week to book more calls?”"
+              placeholder={busy ? 'Your team is working…' : 'Tell your Chief what you need, or type / for a format. e.g. “Make a carousel on why referrals are not a pipeline”'}
               value={input}
+              disabled={busy}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
             />
             <button className={`cc-btn cc-mic ${listening ? 'on' : ''}`} onClick={mic} title="Speak">{listening ? '■' : '🎙'}</button>
-            <button className="cc-btn cc-go" disabled={busy || !input.trim()} onClick={() => send()}>{busy ? '…' : 'Send'}</button>
+            <button className="cc-btn cc-go" disabled={busy || !input.trim()} onClick={() => send()}>↑</button>
+          </div>
+          <div className="cc-opts">
+            <label className="row" style={{ gap: 6 }}><input type="checkbox" checked={pictures} onChange={(e) => setPictures(e.target.checked)} /> Draw AI pictures on carousel slides (uses your OpenAI key, a few minutes)</label>
           </div>
           {err && <div className="err" style={{ marginTop: 10 }}>{err}</div>}
         </div>
 
         <div className="cc-panel">
-          {!out && (
-            <div className="cc-intro">
-              <h3>{TEAM[focus].title}</h3>
-              <p className="muted">{TEAM[focus].about}</p>
-              {busy && route && <p className="cc-route"><span className="spinner" /> {route.reason || 'Working on it…'}</p>}
-              {busy && !route && <p className="cc-route"><span className="spinner" /> Reading your instruction…</p>}
-              {!busy && (
-                <p className="muted" style={{ fontSize: 13 }}>
-                  Tip: click a format below the team to start with it, or type <b>/</b> commands as in the <Link href="/">Studio</Link>. Everything is saved in <Link href="/history">History</Link>.
-                </p>
-              )}
-            </div>
-          )}
-          {out && (
+          {!out ? (
             <>
-              {route && <div className="cc-route">Handled by <b>{route.lane === 'content' ? `Content → ${FORMATS.find((f) => f.cmd === route.command)?.label || route.command}` : route.lane === 'brain' ? 'Chief' : TEAM[route.lane].title}</b>{route.reason ? ` · ${route.reason}` : ''}</div>}
+              <div className="cc-field"><BrainField notes={notes} active={active} busy={busy} /></div>
+              <div className="cc-cap">
+                {busy ? (
+                  <>
+                    <div className="tag">● {fmt ? fmt.label.toUpperCase() : route ? route.lane.toUpperCase() : 'CHIEF'}</div>
+                    <span>{stage === 'route' ? 'Reading your instruction' : stage === 'research' ? 'Research is finding the angle in your notes' : fmt ? `${fmt.doing}${route?.command === '/carousel' ? '' : ''}` : 'Working from your notes'}</span>
+                  </>
+                ) : (
+                  <>
+                    <b>Chief</b>
+                    <span>Your Chief reads every note ({notes.length}) and routes every marketing job. Give it one instruction.</span>
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="cc-result">
+              {route && (
+                <div className="cc-meta">
+                  Handled by <b>{route.lane === 'content' ? `Research → Content → ${fmt?.label || route.command}` : route.lane === 'brain' ? 'Chief' : route.lane === 'strategist' ? 'Strategist' : 'Research'}</b>
+                  {' · '}<Link href="/history">History</Link>
+                </div>
+              )}
               {out.kind === 'answer' ? (
                 <>
                   <h3 style={{ marginTop: 0 }}>{out.title}</h3>
                   <div className="post" dangerouslySetInnerHTML={{ __html: md(out.data?.answer) }} />
                   {!!actions.length && (
                     <>
-                      <p className="muted" style={{ margin: '14px 0 0', fontSize: 13 }}>Send to Content:</p>
-                      <div className="cc-act">
+                      <p className="muted" style={{ margin: '14px 0 6px', fontSize: 13 }}>Send to Content:</p>
+                      <div className="row" style={{ flexWrap: 'wrap' }}>
                         {actions.slice(0, 4).map((a, i) => (
                           <button key={i} className="btn small" disabled={busy} onClick={() => send(`${a.command} ${a.brief}`)}>{a.label}</button>
                         ))}
@@ -226,9 +328,9 @@ export default function CommandCentre() {
                   )}
                 </>
               ) : (
-                <OutputView key={out.id} out={out} brand={brand} autoDraw />
+                <OutputView key={out.id} out={out} brand={brand} autoDraw autoIllustrate={pictures} />
               )}
-            </>
+            </div>
           )}
         </div>
       </div>

@@ -55,7 +55,7 @@ ${d.ps ? `<p style="margin-top:24px"><b>P.S.</b> ${esc(d.ps)}</p>` : ''}
 </td></tr></table></td></tr></table></body></html>`;
 }
 
-export default function OutputView({ out: initial, brand, autoDraw = false }: { out: Output; brand: BrandKit; autoDraw?: boolean }) {
+export default function OutputView({ out: initial, brand, autoDraw = false, autoIllustrate = false }: { out: Output; brand: BrandKit; autoDraw?: boolean; autoIllustrate?: boolean }) {
   const [out, setOut] = useState<Output>(initial);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState('');
@@ -134,6 +134,7 @@ export default function OutputView({ out: initial, brand, autoDraw = false }: { 
     started.current = true;
     if (out.kind === 'image' && !d.imageUrl) draw('image');
     if (out.kind === 'newsletter' && !d.heroUrl && d.heroPrompt) draw('hero');
+    if (out.kind === 'carousel' && autoIllustrate) illustrateAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoDraw]);
 
