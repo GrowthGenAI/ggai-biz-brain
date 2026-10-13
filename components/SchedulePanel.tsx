@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { fitImage, slidesToJpegs, slidesToPdf, slug, uploadFile } from '@/lib/formats';
 import type { BrandKit, Output } from '@/lib/types';
+import { formatPost } from '@/lib/postformat';
 
 const IG_API_MAX = 10;
 
@@ -37,9 +38,9 @@ export default function SchedulePanel({
   const [date, setDate] = useState(tomorrowIndia());
   const [useLi, setUseLi] = useState(true);
   const [useIg, setUseIg] = useState(igPossible);
-  const [liText, setLiText] = useState(defaultLinkedIn);
+  const [liText, setLiText] = useState(() => formatPost(defaultLinkedIn));
   const [docTitle, setDocTitle] = useState(out.title);
-  const [igText, setIgText] = useState(defaultCaption);
+  const [igText, setIgText] = useState(() => formatPost(defaultCaption));
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
   const [done, setDone] = useState<any>(null);

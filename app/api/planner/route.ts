@@ -1,3 +1,4 @@
+import { formatPost } from '@/lib/postformat';
 import { NextResponse } from 'next/server';
 import { getAccount, linkedinConfigured } from '@/lib/linkedin';
 import { getIgAccount, instagramConfigured } from '@/lib/instagram';
@@ -23,6 +24,8 @@ export async function POST(req: Request) {
   const ok = (extra: object = {}) => NextResponse.json({ ok: true, ...extra });
 
   if (b.action === 'add') {
+    if (b.linkedin?.text) b.linkedin.text = formatPost(String(b.linkedin.text));
+    if (b.instagram?.caption) b.instagram.caption = formatPost(String(b.instagram.caption));
     const out = await getOutput(String(b.outputId || ''));
     if (!out) return NextResponse.json({ error: 'That post was not found.' }, { status: 404 });
     if (!/^\d{4}-\d{2}-\d{2}$/.test(b.date || '')) return NextResponse.json({ error: 'Pick a date.' }, { status: 400 });

@@ -46,7 +46,8 @@ export default function Slide({ slide, brand, n, total }: { slide: CarouselSlide
       <div style={base}>
         <div style={{ position: 'absolute', right: -160, top: -160, width: 560, height: 560, borderRadius: '50%', background: c.secondary, opacity: 0.9 }} />
         <div style={{ position: 'absolute', right: 120, top: 260, width: 90, height: 90, borderRadius: '50%', background: c.accent }} />
-        {brand.logoUrl && <img src={brand.logoUrl} alt="" style={{ height: 70, alignSelf: 'flex-start', position: 'relative' }} />}
+        {/* LinkedIn draws the document title over the top-left corner, so the logo sits below it. */}
+        {brand.logoUrl && <img src={brand.logoUrl} alt="" style={{ height: 70, alignSelf: 'flex-start', position: 'relative', marginTop: 130 }} />}
         <div style={{ marginTop: 'auto', position: 'relative' }}>
           <div style={{ fontFamily: head, fontSize: 104, lineHeight: 1.04, fontWeight: 700, letterSpacing: '-0.02em' }}>{slide.heading}</div>
           {slide.body && <div style={{ fontSize: 40, lineHeight: 1.35, marginTop: 36, color: c.secondary, maxWidth: 820 }}>{slide.body}</div>}
