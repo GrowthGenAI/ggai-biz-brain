@@ -82,11 +82,16 @@ export default function Slide({ slide, brand, n, total }: { slide: CarouselSlide
     );
   }
 
+  // If the heading already starts with its own number ("4. Predictable…"), show that number in the badge.
+  const own = (slide.heading || '').match(/^\s*(\d{1,2})[.)]\s+(.*)$/);
+  const badge = own ? own[1] : String(n - 1);
+  const heading = own ? own[2] : slide.heading;
+
   return (
     <div style={base}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
         <div style={{ width: 84, height: 84, borderRadius: 22, background: c.accent, color: isDark(c.accent) ? '#fff' : c.text, display: 'grid', placeItems: 'center', fontSize: 42, fontWeight: 700 }}>
-          {n - 1}
+          {badge}
         </div>
         <div style={{ height: 6, flex: 1, background: c.secondary, borderRadius: 3, opacity: 0.7 }} />
       </div>
@@ -94,7 +99,7 @@ export default function Slide({ slide, brand, n, total }: { slide: CarouselSlide
         <img src={slide.imageUrl} alt="" style={{ width: '100%', height: 430, objectFit: 'cover', borderRadius: 32, marginTop: 56 }} />
       )}
       <div style={{ fontFamily: head, fontSize: slide.imageUrl ? 70 : 84, lineHeight: 1.08, fontWeight: 700, color: c.primary, marginTop: slide.imageUrl ? 50 : 110 }}>
-        {slide.heading}
+        {heading}
       </div>
       {slide.body && <div style={{ fontSize: dense ? 36 : 42, lineHeight: 1.45, marginTop: 36 }}>{slide.body}</div>}
       {slide.bullets?.length ? (
