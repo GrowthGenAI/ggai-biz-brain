@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { AUTH_COOKIE, sessionToken } from './lib/auth';
 
-const OPEN_PATHS = ['/login', '/api/login', '/api/cron/run']; // the cron route checks CRON_SECRET itself
+const OPEN_PATHS = ['/login', '/api/login', '/api/cron/run', '/community']; // the cron route checks CRON_SECRET itself
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
