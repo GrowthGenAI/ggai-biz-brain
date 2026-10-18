@@ -1,6 +1,7 @@
 import { readJSON, writeJSON, loadMedia } from './store';
 import { createPost, getAccount, uploadMedia } from './linkedin';
 import { getIgAccount, publishInstagram, refreshIfOld } from './instagram';
+import { nowIndia, writeSheet } from './sheet';
 
 /*
  * The Content Planner: one row per approved post, with a date and the
@@ -15,6 +16,7 @@ export type PlanRow = {
   kind: string;
   date: string; // YYYY-MM-DD, India time
   createdAt: string;
+  sheetRow?: number; // row in the content sheet this post came from
   linkedin?: { text: string; docTitle?: string; fileUrl?: string; fileType?: 'pdf' | 'image'; status: Status; url?: string; error?: string; postedAt?: string };
   instagram?: { caption: string; imageUrls: string[]; status: Status; url?: string; error?: string; postedAt?: string };
 };
@@ -84,7 +86,22 @@ export async function runRow(id: string) {
       await updateRow(id, (r) => ({ ...r, [p]: { ...r[p]!, status: 'failed', error: e.message || 'Posting failed.' } }));
     }
   }
-  return (await getPlan()).find((r) => r.id === id);
+  const after = (await getPlan()).find((r) => r.id === id);
+  if (after?.sheetRow) await reportToSheet(after);
+  return after;
+}
+
+/** Write the result back to the content sheet: Posted + link, or Failed + why. */
+async function reportToSheet(r: PlanRow) {
+  const parts = [r.linkedin, r.instagram].filter(Boolean) as { status: Status; url?: string; error?: string }[];
+  if (!parts.length) return;
+  const failed = parts.filter((p) => p.status === 'failed');
+  const posted = parts.filter((p) => p.status === 'posted');
+  if (posted.length === parts.length) {
+    await writeSheet(r.sheetRow!, { Status: 'Posted', 'Post link': posted.map((p) => p.url).filter(Boolean).join(' '), 'Posted at': nowIndia(), Error: '' });
+  } else if (failed.length) {
+    await writeSheet(r.sheetRow!, { Status: 'Failed', Error: failed.map((p) => p.error).join(' | ').slice(0, 400) });
+  }
 }
 
 /** Daily job: everything dated today or earlier that is still scheduled. */

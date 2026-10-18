@@ -3,6 +3,7 @@ import { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { PlanRow } from '@/lib/planner';
+import SheetSync from '@/components/SheetSync';
 
 type Acc = { configured: boolean; connected: boolean; name: string; expiresAt: string };
 type Data = { today: string; rows: PlanRow[]; linkedin: Acc; instagram: Acc };
@@ -119,6 +120,8 @@ function Planner() {
           <p className="muted" style={{ fontSize: 12 }}>posts published</p>
         </div>
       </div>
+
+      <SheetSync onDone={load} />
 
       <div className="card">
         <div className="row" style={{ justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap' }}>

@@ -4,6 +4,7 @@ import { getAccount, linkedinConfigured } from '@/lib/linkedin';
 import { getIgAccount, instagramConfigured } from '@/lib/instagram';
 import { getPlan, runRow, savePlan, todayIndia, updateRow, type PlanRow } from '@/lib/planner';
 import { getOutput } from '@/lib/history';
+import { writeSheet } from '@/lib/sheet';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -41,10 +42,12 @@ export async function POST(req: Request) {
       kind: out.kind,
       date: b.date,
       createdAt: new Date().toISOString(),
+      ...(Number(b.sheetRow) > 1 ? { sheetRow: Number(b.sheetRow) } : {}),
       ...(b.linkedin ? { linkedin: { text: b.linkedin.text, docTitle: b.linkedin.docTitle, fileUrl: b.linkedin.fileUrl, fileType: b.linkedin.fileType, status: 'scheduled' as const } } : {}),
       ...(b.instagram ? { instagram: { caption: b.instagram.caption || '', imageUrls: b.instagram.imageUrls, status: 'scheduled' as const } } : {}),
     };
     await savePlan([...(await getPlan()), row]);
+    if (row.sheetRow) await writeSheet(row.sheetRow, { Status: 'Scheduled', Error: '' });
     if (b.postNow) return ok({ row: await runRow(row.id) });
     return ok({ row });
   }
